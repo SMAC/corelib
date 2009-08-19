@@ -1,0 +1,32 @@
+dt {
+	font-weight: bold;
+}
+
+table {
+	margin-bottom: 1em;
+}
+
+table.docutils th {
+	border-left: 1px solid #ccc;
+	background-color: #eee;
+	padding: 0.3em 0.5em !important;
+}
+table.docutils td {
+	border-left: 1px solid #ddd;
+	padding: 0.3em 0.5em;
+}
+table.docutils th:first-child,
+table.docutils td:first-child {
+	border-left: 0;
+}
+
+li p.first {
+	margin-bottom: 0.2em;
+}
+li p.first + p {
+	margin-top: 0.2em;
+}
+
+img {
+	max-width: 100%;
+}
