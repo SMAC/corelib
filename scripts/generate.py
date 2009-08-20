@@ -65,7 +65,7 @@ if __name__ == '__main__':
     runall = 'all' in args
     
     basedir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    sys.path.insert(0, basedir)
+    os.environ['PYTHONPATH'] = "%s:%s" % (basedir, os.environ['PYTHONPATH'])
     
     if runall or 'thriftpython' in args:
         os.system('thrift --gen py:twisted -r -o "%s" "%s"' % (os.path.join(basedir, 'smac'), os.path.join(basedir, 'smac', 'conf', 'specifications', 'api', 'all.thrift')))
