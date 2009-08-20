@@ -79,8 +79,7 @@ if __name__ == '__main__':
         os.system("epydoc --html -o \"%s/docs/_api\" --name \"SMAC Core library\" --url http://smac.webhop.org --graph all --inheritance grouped -v smac" % basedir)
     
     if runall or 'epydocpdf' in args:
-        print "PDF generation not implemented now"
-        #os.system("epydoc --pdf -o \"%s/docs/_api\" --name \"SMAC Core library\" --url http://smac.webhop.org --graph classtree --inheritance grouped -v smac" % basedir)
+        os.system("epydoc --pdf -o \"%s/docs/_api\" --name \"SMAC Core library\" --url http://smac.webhop.org --graph classtree --inheritance grouped -v smac" % basedir)
     
     if runall or 'sphinxhtml' in args:
         os.chdir(os.path.join(basedir, 'docs'))

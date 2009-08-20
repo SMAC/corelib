@@ -3,6 +3,7 @@ include AUTHORS
 include INSTALL
 include LICENSE
 include MANIFEST.in
+include requirements.txt
 recursive-include docs *
 recursive-include tests *
 recursive-include smac/conf/specifications *.xml *.thrift
