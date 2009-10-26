@@ -24,11 +24,28 @@ and other system-level defined configuration values.
 @license: GPLv3
 """
 
+import os
+
 amqp = {
     "vhost": "/", 
     "host": "localhost", 
     "password": "guest", 
     "port": 5672, 
     "user": "guest",
-    "spec": "standard/amqp0-8.xml",
+    "namespace": 'smac',
+    "spec": os.path.join(os.path.dirname(os.path.realpath(__file__)), 'specifications', 'amqp',
+            'standard', 'amqp0-8.xml'),
 }
+
+rpc = {
+    "run_server": False,
+    "port": 9090,
+}
+
+ping_interval = 2
+
+max_ping_interval = ping_interval * 1.5
+
+stream_logs = True
+
+additional_bindings = None

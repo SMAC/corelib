@@ -1,3 +1,5 @@
 include "base.thrift"
 include "controller.thrift"
+include "archiver.thrift"
 include "analyzer.thrift"
+include "logger.thrift"

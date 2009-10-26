@@ -34,34 +34,22 @@ service Controller extends base.Module {
     # Controller - Web client interface #
     #####################################
     
-    /**
-     * Pings the whole system to get an overview of the currently active and
-     * connected modules.
-     */
-    list<base.GeneralModuleInfo> get_connected_module_list(1: bool
-        refresh) throws (1: base.NotYetReady e),
+    list<base.GeneralModuleInfo> module_list(),
+    
+    list<base.ModuleAddress> get_log_list(1: base.ModuleAddress logger),
+    
+    string get_log(1: base.ModuleAddress logger, 2: base.ModuleAddress module),
     
     
     ##################################
     # Controller - Modules interface #
     ##################################
     
-    /**
-     * Callback to be called by the consumers when joining the system
-     */
-    oneway void announce(1: base.GeneralModuleInfo module_info),
-    
-    /**
-     * Callback to be called by all consumers reached by a ping command
-     */
-    oneway void ping_reply(1: base.GeneralModuleInfo module_info),
-    
-    
-    oneway void receive_log_entry(1: base.ModuleAddress module,
-        2: string log_entry),
-    
-    list<string> get_module_log_stream(
-        1: base.ModuleAddress module,
-        2: i16 timeout, 3: i32 offset) throws (1: base.UnknownModule unknown),
+    #oneway void receive_log_entry(1: base.ModuleAddress module,
+    #    2: string log_entry),
+    #
+    #list<string> get_module_log_stream(
+    #    1: base.ModuleAddress module,
+    #    2: i16 timeout, 3: i32 offset) throws (1: base.UnknownModule unknown),
     
 }

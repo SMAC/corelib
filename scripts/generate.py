@@ -58,14 +58,14 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print "Usage:"
         print "%s all" % sys.argv[0]
-        print "%s [sphinxhtml] [sphinxpdf] [epydochtml] [epydocpdf] [thrifthtml] [thriftpython]" % sys.argv[0]
+        print "%s [sphinxhtml] [sphinxpdf] [epydochtml] [epydocpdf] [thrifthtml] [thriftpython] [thriftdjango]" % sys.argv[0]
         sys.exit(1)
     
     args = sys.argv[1:]
     runall = 'all' in args
     
     basedir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    os.environ['PYTHONPATH'] = "%s:%s" % (basedir, os.environ['PYTHONPATH'])
+    os.environ['PYTHONPATH'] = "%s:%s" % (basedir, os.environ.get('PYTHONPATH', ''))
     
     if runall or 'thriftpython' in args:
         os.system('thrift --gen py:twisted -r -o "%s" "%s"' % (os.path.join(basedir, 'smac'), os.path.join(basedir, 'smac', 'conf', 'specifications', 'api', 'all.thrift')))
@@ -98,4 +98,40 @@ if __name__ == '__main__':
         os.system('thrift --gen html -r -o "%s" "%s"' % (os.path.join(basedir, 'docs'), os.path.join(basedir, 'smac', 'conf', 'specifications', 'api', 'all.thrift')))    
         empty_dir(os.path.join(basedir, 'docs', '_thrift'))
         os.rename(os.path.join(basedir, 'docs', 'gen-html'), os.path.join(basedir, 'docs', '_thrift'))
+    
+    if args[0] == 'thriftdjango':
+        output_dir = args[1]
+        new_ns = args[2]
+        output_dir = os.path.realpath(output_dir)
         
+        print ""
+        print "CAUTION: This script will remove all files in the '%s' directory." % output_dir
+        print ""
+
+        response = raw_input("Continue execution [N/y]? ")
+
+        if not response.lower().startswith('y'):
+            print "Cancelling execution"
+            print ""
+            sys.exit(0)
+
+        empty_dir(os.path.join(output_dir))
+        os.system('thrift -r -o "%s" --gen py:new_style "%s"' % (output_dir, os.path.join(basedir, 'smac', 'conf', 'specifications', 'api', 'all.thrift')))
+        os.system('mv %s %s' % (os.path.join(output_dir, 'gen-py', 'smac', 'api', '*'), output_dir))
+        empty_dir(os.path.join(output_dir, 'gen-py'))
+        os.rmdir(os.path.join(output_dir, 'gen-py'))
+        
+        # Replace all namespaces!
+        old_ns = 'smac.api'
+        
+        for root, dirs, files in os.walk(output_dir):
+            for name in files:
+                f = os.path.join(root, name)
+
+                fh = open(f, 'r')
+                s = fh.read().replace(old_ns, new_ns)
+                fh.close()
+                
+                fh = open(f, 'w+')
+                fh.write(s)
+                fh.close()

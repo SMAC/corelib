@@ -40,6 +40,22 @@ def get_class_instance(klass, module=None):
         import implementation as module
     
     try:
-        inspect.getmembers(module, lambda v: isinstance(v, klass))[0][1]
-    except KeyError:
+        return inspect.getmembers(module, lambda v: isinstance(v, klass))[0][1]
+    except IndexError:
         return None
+
+def get_processor_for_interface(interface):
+    """
+    Returns the thrift processor class for the given interface. This allows to
+    retrieve the Processor of a defined handler on runtime by introspecting
+    his interface.
+    
+    @param interface: The interface for which to retrieve the C{Processor}
+    @type  interface: A L{zope.interface.Interface} class
+    """
+    
+    module = __import__(interface.__module__, fromlist=['Processor'], level=0)
+    
+    return getattr(module, 'Processor', None)
+    
+    

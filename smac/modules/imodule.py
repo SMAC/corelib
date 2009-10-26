@@ -30,6 +30,15 @@ class IModule(Interface):
                             module local settings.
                             @type: A L{Settings} instance.""")
     
+    channel = Attribute("""The actual AMQP client object used for the data
+                           communication with the AMQ broker.
+                           This attribute allows the reuse of the actual
+                           connection.
+                           The attribute is setted by the AMQ Client factory
+                           responsible for the setup of the connection.
+                           @type: A L{txamqp.protocol.AMQChannel} instance.
+                           """)
+    
     def set_identifier(id):
         """
         Called by the runner to assign the module id to the instance.

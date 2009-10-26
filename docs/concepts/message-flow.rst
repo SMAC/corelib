@@ -52,7 +52,7 @@ The SMAC message dispatching system allows to target each module or group with
 * **Implementation targeting**
 
   The message is sent to all modules of a specific implementation. E.g. all
-  Analyze modules which are capable of analyze .ppt files.
+  Analyze modules which are capable to analyze .ppt files.
 
 * **Instance targeting**
 
@@ -101,6 +101,21 @@ subsystem:
    
    For more informations see :doc:`Thrift </technologies/thrift>`.
 
+Services targeting
+------------------
+
+The last targeting mode supported by the system is not directly
+module-dependent. A service is a message stream which a module sends to the
+services exchange with a given routing key (defined by the service self).
+
+Service consumers (i.e. normal modules with specific capabilities) can
+subscribe to a service by binding their exclusive queue to the services
+exchange with the service specific routing key.
+
+The services exchange type is set to topic (to allow wild-cards in the
+routing key) and the only available distribution mode is broadcast (this means
+that all service exposed API methods have to be defined as ``oneway`` in
+thrift).
 
 
 

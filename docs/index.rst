@@ -34,6 +34,8 @@ Contents:
    technologies/index
    concepts/index
    components/index
+   administration/index
+   references
 
 
 API Documentation

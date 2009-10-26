@@ -23,6 +23,11 @@ utilities.
 @license: GPLv3
 """
 
+# @TODO: Remove this. Hides the DeprecationWarnings of the cryptolibs of the
+# twisted framework.
+import warnings
+warnings.simplefilter("ignore", DeprecationWarning)
+
 COMMANDS_PKG = 'smac.core.management.commands'
 
 import smac.core.management.commands

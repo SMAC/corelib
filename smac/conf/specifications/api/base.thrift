@@ -17,20 +17,67 @@
 
 namespace py smac.api.base
 
-struct GeneralModuleInfo {
-    1: i16 id
-    2: string module_class
-    3: string implementation
-    4: string ip_address
-    5: string hostname
-}
-
 struct ModuleAddress {
-    1: i16 id
-    2: string module_class
-    3: string implementation
+    1: string instance_id
+    2: string implementation
+    3: string iface
+    4: string ns
 }
 
+struct GeneralModuleInfo {
+    1: ModuleAddress address
+    2: string ip_address
+    3: string hostname
+}
+
+/**
+ * The base external API for each module
+ */
+service Module {
+    /**
+     * Asynchronous ping to be used by a broadcast message
+     */
+    oneway void announce(1: GeneralModuleInfo info)
+}
+
+
+    /**
+     * Gets the status of the current service offered by the module.
+     * The current implementation returns a struct with the load average.
+     */
+    //Status get_status(),
+    
+    /**
+     * Gets the status of the task identified by the task_id parameter or the
+     * current task if not provided
+     */
+    //TaskStatus get_task_status(1: i32 task_id=0) throws (1: UnknownTask e),
+    
+    /**
+     * Stops the task identified by the task_id parameter or the current task
+     * if not provided
+     */
+    //void stop_task(1: i32 task_id=0) throws (1: UnknownTask e),
+    
+    /**
+     * Restarts the module.
+     */
+    //void restart(),
+    
+    /**
+     * Starts the log streaming to the logs exchange, adding the id to the
+     * subscribers list.
+     */
+    //void start_log_streaming(1: string stream_id),
+    
+    /**
+     * Stops the log streaming for the given id. When the subscribed id
+     * list reaches 0 length, the stop_log_streaming commands effectively
+     * stops the streaming.
+     */
+    //void stop_log_streaming(1: string stream_id),
+//}
+/*
 struct Status {
     1: double load_average1
     2: double load_average5
@@ -64,50 +111,4 @@ exception NotYetReady {
     1: i16 suggested_retry_delay
 }
 
-exception StreamingNotStarted {}
-
-/**
- * The base external API for each module
- */
-service Module {
-    /**
-     * Asynchronous ping to be used by a broadcast message
-     */
-    oneway void ping(),
-    
-    /**
-     * Gets the status of the current service offered by the module.
-     * The current implementation returns a struct with the load average.
-     */
-    Status get_status(),
-    
-    /**
-     * Gets the status of the task identified by the task_id parameter or the
-     * current task if not provided
-     */
-    TaskStatus get_task_status(1: i32 task_id=0) throws (1: UnknownTask e),
-    
-    /**
-     * Stops the task identified by the task_id parameter or the current task
-     * if not provided
-     */
-    void stop_task(1: i32 task_id=0) throws (1: UnknownTask e),
-    
-    /**
-     * Restarts the module.
-     */
-    void restart(),
-    
-    /**
-     * Starts the log streaming to the logs exchange, adding the id to the
-     * subscribers list.
-     */
-    void start_log_streaming(1: string stream_id),
-    
-    /**
-     * Stops the log streaming for the given id. When the subscribed id
-     * list reaches 0 length, the stop_log_streaming commands effectively
-     * stops the streaming.
-     */
-    void stop_log_streaming(1: string stream_id),
-}
+exception StreamingNotStarted {}*/
