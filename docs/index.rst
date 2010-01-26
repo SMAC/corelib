@@ -35,6 +35,8 @@ Contents:
    concepts/index
    components/index
    administration/index
+   modules/index
+   batteries/index
    references
 
 

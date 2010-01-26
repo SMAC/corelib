@@ -87,19 +87,7 @@ subsystem:
 | Instance       | Unicast only          |                                   |
 +----------------+-----------------------+-----------------------------------+
 
-.. [#bd_lim] This limitation is due to the thrift architecture which expects
-   only one response per request. If a message is relayed to more than one
-   module and all modules provide a response the caller will receive only the
-   first result.
-   
-   If a broadcast command needs a response, then the calling module MUST 
-   provide a callback which the called module can use to transmit the
-   response.
-   
-   Note that the called method will be executed on each method, and not only
-   on the first which provide the response.
-   
-   For more informations see :doc:`Thrift </technologies/thrift>`.
+.. [#bd_lim] This limitation is due to the thrift architecture which expects only one response per request. If a message is relayed to more than one module and all modules provide a response the caller will receive only the first result. If a broadcast command needs a response, then the calling module MUST provide a callback which the called module can use to transmit the response. Note that the called method will be executed on each method, and not only on the first which provide the response. For more informations see :doc:`Thrift </technologies/thrift>`.
 
 Services targeting
 ------------------

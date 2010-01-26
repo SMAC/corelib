@@ -25,5 +25,23 @@ implementations
 """
 
 from interface import ICommand
+from twisted.python import usage
+import inspect
 
-__all__ = ['ICommand',]
+class BaseOptions(usage.Options):
+    def getSynopsis(self):
+        spec = inspect.getargspec(self.parseArgs)
+        
+        r = ""
+        for i, arg in enumerate(spec.args[1:], 2):
+            if spec.defaults and len(spec.args) - i < len(spec.defaults):
+                r += " [{0}]".format(arg)
+            else:
+                r += " {0}".format(arg)
+        
+        if spec.varargs:
+            r += " [...]"
+        
+        return super(BaseOptions, self).getSynopsis() + r
+
+__all__ = ['ICommand','BaseOptions']

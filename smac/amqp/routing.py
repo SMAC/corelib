@@ -31,9 +31,6 @@ class Address(namedtuple('Address', 'namespace, interface, implementation, insta
             implementation=self.implementation,
             instance_id=self.instance_id
         )
-    
-    #def __str__(self):
-    #    return self.routing_key()
 
 default_address = Address(None, None, None, None, None)
 

@@ -24,7 +24,7 @@ AMQP client factory to create amqp based twisted services.
 
 # Twisted libraries
 from twisted.internet.protocol import ClientFactory
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks, returnValue, succeed
 from twisted.internet.error import ConnectionDone
 from twisted.internet import reactor
 from twisted.python import log
@@ -79,8 +79,6 @@ class AMQServerFactory(ClientFactory):
         log.msg("Connection to the AMQP broker failed.")
         log.msg(reason.getErrorMessage())
         
-        #log.err(reason)
-        
         if reactor.running:
             reactor.stop()
     
@@ -101,14 +99,14 @@ class AMQServerFactory(ClientFactory):
             reactor.stop()
     
     def startFactory(self):
-        self.handler._pre_startup()
+        self.handler.pre_startup()
         
     def stopFactory(self):
         pass
     
     @inlineCallbacks
     def _closeConnection(self):
-        self.handler._tear_down()
+        self.handler.tear_down()
         
         c = yield self.client.channel(0)
         
@@ -133,9 +131,9 @@ class AMQServerFactory(ClientFactory):
         
         # Set the channel attribute of the thrift handler instance to allow
         # the reuse of the amq connection for additional tasks
-        self.handler.set_channel(channel)
+        self.handler.channel = channel
         
-        self.handler.set_client_factory(AMQClientFactory(self.client))
+        self.handler.client_factory = AMQClientFactory(self.client)
         
         self.dispatcher = Dispatcher()
         
@@ -144,11 +142,17 @@ class AMQServerFactory(ClientFactory):
                 self.handler.implementation, self.handler.id)
         yield self.dispatcher.listen(self.client, self.processor)
         
-        self.handler._post_startup()
+        self.handler.dispatcher = self.dispatcher
+        
+        self.handler.post_startup()
     
 class AMQClientFactory(object):
     def __init__(self, amqp_client):
         self.amqp_client = amqp_client
+        
+        # @TODO: Find some neat way to do this, the queues have to be closed when the 
+        # client isn't used anymore!
+        self.clients = {}
     
     def build_client(self, address, distribution=None):
         if address.is_domain():
@@ -164,6 +168,11 @@ class AMQClientFactory(object):
             raise ValueError('The message distribution mode was not ' +
                     'specified and could not be inferred from the address.')
         
+        key = (address, distribution)
+        
+        if key in self.clients:
+            return succeed(self.clients[key])
+        
         serv_ex = self._exchange_name(address, distribution)
         resp_ex = self._exchange_name(address, RESPONSES)
         
@@ -171,9 +180,27 @@ class AMQClientFactory(object):
         
         pfactory = TBinaryProtocol.TBinaryProtocolFactory()
         
-        return self.amqp_client.createThriftClient(resp_ex, serv_ex,
-                address.routing_key(), thrift_client, CHANNEL,
-                iprot_factory=pfactory, oprot_factory=pfactory)
+        client = self.amqp_client.createThriftClient(resp_ex, serv_ex,
+                    address.routing_key(), thrift_client, CHANNEL,
+                    iprot_factory=pfactory, oprot_factory=pfactory)
+                    
+        def handleClientQueueError(self, failure):
+            log.err("CLIENT QUEUE ERROR")
+
+        def handleClosedClientQueue(self, failure):
+            log.err("CLOSED CLIENT QUEUE")
+            
+        client.handleClientQueueError = handleClientQueueError
+        client.handleClosedClientQueue = handleClosedClientQueue
+        
+        client.addCallback(self._register_client, key)
+        
+        return client
+    
+    def _register_client(self, client, key):
+        self.clients[key] = client
+        
+        return client
     
     def _thrift_client(self, address):
         try:

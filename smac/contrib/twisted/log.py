@@ -1,5 +1,5 @@
-from twisted.python.log import FileLogObserver, _safeFormat, textFromEventDict
-
+from twisted.python.log import FileLogObserver, _safeFormat, textFromEventDict, msg
+from twisted.internet import reactor
 
 class TxAMQPLoggingObserver(FileLogObserver):
     
@@ -7,6 +7,11 @@ class TxAMQPLoggingObserver(FileLogObserver):
         self.client = client
         self.module_address = address.to_module_address()
         self.send_printed = send_printed
+    
+    def start(self):
+        FileLogObserver.start(self)
+        
+        self.client.receive_startup_log(self.module_address, "AMQP log streaming started")
     
     def emit(self, eventDict):
         if not self.send_printed and eventDict.get('printed', False):

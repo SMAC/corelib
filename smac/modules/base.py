@@ -27,36 +27,82 @@ a new implementation.
 import abc
 import socket
 
-from zope.interface import * #implements, implementedBy
+from zope.interface import implements, providedBy
 
 from twisted.python import log
+from twisted.internet import reactor
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks
 
 from smac.modules.imodule import IModule
 from smac.amqp.routing import Address
-from smac.api.base.ttypes import GeneralModuleInfo, ModuleAddress
+from smac.amqp import UNICAST, BROADCAST, RESPONSES, SERVICES
+from smac.api.base.ttypes import GeneralModuleInfo, ModuleAddress, InvalidTask
 from smac.api.logger.constants import LOGGER_ROUTING_KEY
 from smac.contrib.twisted.log import TxAMQPLoggingObserver
+from smac.util.hooks import execute_hook, register
+from smac.task import ITask, ThriftTaskAdapter
+from smac.decorators import log_calls
 
 class ModuleBase(object):
     __metaclass__ = abc.ABCMeta
     
     implements(IModule)
     
-    def set_channel(self, channel):
-        self.channel = channel
+    def __init__(self):
+        self.tasks = dict()
+        self.channel = None
+        self.client_factory = None
+        self.queues = None
+        self.settings = None
     
-    def set_client_factory(self, factory):
-        self.client_factory = factory
+    def add_task(self, task):
+        task = ITask(task)
+        
+        assert task.id not in self.tasks, "Task already added to the tasks register"
+        
+        task.module = self.address
+        task.add_observer(self.task_updated_callback)
+        self.tasks[task.id] = task
+        
+        self.task_updated_callback(task)
+        
+    def remove_task(self, task):
+        assert task.id in self.tasks, "Task is not present in the tasks register"
+        
+        task.remove_observer(self.task_updated_callback)
+        del self.tasks[task.id]
     
-    ##
-    # Properties
-    ##
+    def task_updated_callback(self, task, *args, **kwargs):
+        routing_key = LOGGER_ROUTING_KEY.format(**self.address._asdict())
+        address = Address(self.namespace, 'Controller')
+        
+        def update(client):
+            client.update_task(ThriftTaskAdapter(task))
+        
+        self.client_factory.build_client(address, BROADCAST).addCallback(update)
+    
+    def get_task(self, task_id):
+        try:
+            return ThriftTaskAdapter(self.tasks[task_id])
+        except KeyError:
+            raise InvalidTask(task_id)
+    
+    def get_tasks(self):
+        return [ThriftTaskAdapter(task) for task in self.tasks.values()]
+    
+    def pre_startup(self):
+        execute_hook(self, 'pre_startup')
+    
+    def post_startup(self):
+        execute_hook(self, 'post_startup')
+    
+    def tear_down(self):
+        execute_hook(self, 'tear_down')
+    
     @property
     def interface(self):
         return str(list(providedBy(self))[0].__module__).split('.')[-1]
-        #return PKG_CLS_SEPARATION.join(str(list(providedBy(self))[0].__module__).split('.')[-2:])
     
     @property
     def implementation(self):
@@ -75,63 +121,36 @@ class ModuleBase(object):
             instance_id=self.id
         )
     
-    ##
-    # Hooks
-    ##
-    def _pre_startup(self):
-        self.pre_startup()
-    
-    def pre_startup(self):
-        pass
-    
-    def _post_startup(self):
-        # Send announce message to all modules
-        self.client_factory.build_client(Address(self.namespace)).addCallback(self.do_announce)
+    @register('pre_startup')
+    @inlineCallbacks
+    def retrieve_info(self):
+        hostname = socket.gethostname()
+        address = self.address.to_module_address()
         
-        # Startup logging observer
-        routing_key = LOGGER_ROUTING_KEY.format(**self.address._asdict())
-        self.client_factory.build_client(Address(self.namespace, 'logger', key=routing_key)).addCallback(self.start_log_streaming)
-        
-        self.post_startup()
+        self.info = GeneralModuleInfo(hostname=hostname, address=address, ip_address=None)
+        self.info.ip_address = yield reactor.resolve(socket.gethostname())
     
-    def post_startup(self):
-        pass
-        
-    def _tear_down(self):
-        self.tear_down()
+    @register('post_startup')
+    def start_log_streaming(self):
+        if (self.settings.stream_logs):
+            routing_key = LOGGER_ROUTING_KEY.format(**self.address._asdict())
+            address = Address(self.namespace, 'logger', key=routing_key)
+            
+            def start(client):
+                TxAMQPLoggingObserver(client, self.address).start()
+                
+            self.client_factory.build_client(address).addCallback(start)
     
-    def tear_down(self):
-        pass
+    @register('post_startup')
+    def do_announce(self, client=None):
+        if client is None:
+            self.client_factory.build_client(Address(self.namespace)).addCallback(self.do_announce)
+            return
         
-    ##
-    # API Methods
-    ##
+        client.announce(self.info)
+        
+        callLater(self.settings.ping_interval, self.do_announce, client)
     
     def announce(self, info):
         pass
-        
-    ##
-    # Utility methods
-    ##
-    def start_log_streaming(self, client):
-        observer = TxAMQPLoggingObserver(client, self.address)
-        
-        if (self.settings.stream_logs):
-            observer.start()
-            
-            # Some extra formatting to see the startup in the log file
-            log.msg("")
-            log.msg("----------------- AMQP log streaming started -----------------")
-            log.msg("")
-    
-    def do_announce(self, client):
-        info = GeneralModuleInfo(
-            hostname=socket.gethostname(),
-            address=self.address.to_module_address(),
-            ip_address=socket.gethostbyname(socket.gethostname()))
-        
-        client.announce(info)
-        
-        callLater(self.settings.ping_interval, self.do_announce, client)
-
 

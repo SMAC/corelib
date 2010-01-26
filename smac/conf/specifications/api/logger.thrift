@@ -21,9 +21,16 @@ namespace py smac.api.logger
 
 const string LOGGER_ROUTING_KEY = '{namespace}.{interface}.{implementation}.{instance_id}.log'
 
+struct LogFile {
+    1: base.ModuleAddress module,
+    2: string filename
+}
+
 service Logger extends base.Module {
     oneway void receive_startup_log(1: base.ModuleAddress sender, 2: string entries),
     oneway void receive_log_entry(1: base.ModuleAddress sender, 2: string entry),
-    list<base.ModuleAddress> get_log_list(),
-    string get_log(1: base.ModuleAddress module),
+    oneway void receive_shutdown_log(1: base.ModuleAddress sender, 2: string entries),
+    
+    list<LogFile> get_log_list(),
+    string get_log(1: LogFile logfile),
 }

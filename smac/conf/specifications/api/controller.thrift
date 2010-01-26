@@ -16,8 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 include "base.thrift"
+include "logger.thrift"
 
 namespace py smac.api.controller
+
+const i32 LOG_REQUEST_TIMEOUT = 45
 
 /**
  * The controller interface. This class exposes two different typologies of
@@ -30,26 +33,36 @@ namespace py smac.api.controller
  */
 service Controller extends base.Module {
     
-    #####################################
-    # Controller - Web client interface #
-    #####################################
+    #############################################################
+    # Controller - Web client interface                         #
+    #############################################################
     
     list<base.GeneralModuleInfo> module_list(),
     
-    list<base.ModuleAddress> get_log_list(1: base.ModuleAddress logger),
+    void request_log_streaming(1: base.ModuleAddress module) throws (1: base.InvalidModule no_module),
     
-    string get_log(1: base.ModuleAddress logger, 2: base.ModuleAddress module),
+    list<logger.LogFile> get_log_list(1: base.ModuleAddress logger),
+    
+    string get_log(1: base.ModuleAddress logger, 2: logger.LogFile logfile),
+    
+    list<base.Task> get_tasks(),
     
     
-    ##################################
-    # Controller - Modules interface #
-    ##################################
+    #############################################################
+    # Controller - Modules interface                            #
+    #############################################################
     
-    #oneway void receive_log_entry(1: base.ModuleAddress module,
-    #    2: string log_entry),
-    #
-    #list<string> get_module_log_stream(
-    #    1: base.ModuleAddress module,
-    #    2: i16 timeout, 3: i32 offset) throws (1: base.UnknownModule unknown),
+    /**
+     * Used when the controller registers itself on the services exchange to
+     * stream a log to the client.
+     */
+    oneway void receive_startup_log(1: base.ModuleAddress sender, 2: string entries),
+    oneway void receive_log_entry(1: base.ModuleAddress sender, 2: string entry),
+    oneway void receive_shutdown_log(1: base.ModuleAddress sender, 2: string entries),
+    
+    /**
+     * Callback used by the modules to notify a task update to the controller.
+     */
+    oneway void update_task(1: base.Task task),
     
 }

@@ -27,13 +27,12 @@ parameter.
 """
 
 from twisted.python import usage
-from twisted.scripts import twistd
 
 from zope.interface import implements, providedBy
 
-from smac.core.management import ICommand
+from smac.core.management import ICommand, BaseOptions
 from smac.conf import Settings
-from smac.modules import get_class_instance, get_processor_for_interface, base
+from smac.modules import get_class_instance, get_processor_for_interface
 
 import os
 import sys
@@ -41,7 +40,7 @@ import inspect
 
 startup_registry = {}
 
-class Options(usage.Options):
+class Options(BaseOptions):
     longdesc = __doc__
     
     optParameters = [
@@ -50,23 +49,6 @@ class Options(usage.Options):
     
     def parseArgs(self, ID):
         self['id'] = ID
-    
-    def getSynopsis(self):
-        import inspect
-        
-        spec = inspect.getargspec(self.parseArgs)
-        
-        r = ""
-        for i, arg in enumerate(spec.args[1:], 2):
-            if spec.defaults and len(spec.args) - i < len(spec.defaults):
-                r += " [{0}]".format(arg)
-            else:
-                r += " {0}".format(arg)
-        
-        if spec.varargs:
-            r += " [...]"
-        
-        return super(Options, self).getSynopsis() + r
     
     def postOptions(self):
         if self['settings'] is None:    
@@ -94,9 +76,15 @@ class Command(object):
         
         s = Settings.from_file(settings)
         
+        # Install the chosen reactor (look at settings.reactor)
+        from twisted.internet.selectreactor import install
+        reactor = install()
+        
         sys.path.insert(0, os.path.dirname(settings))
         
         # The module should now be on the path, let's search for it.
+        from smac.modules import base
+        
         try:
             # The get_class_instance function loads the 'implementation'
             # module by default. Search for an instance of base.ModuleBase
@@ -127,6 +115,8 @@ class Command(object):
         
         # Initialize basic configuration of the twisted application runner
         # @TODO: Move this to the `smac run` command
+        from twisted.scripts import twistd
+        
         config = twistd.ServerOptions()
         config.parseOptions(['--pidfile={0}.pid'.format(id), '-noy', runner])
         

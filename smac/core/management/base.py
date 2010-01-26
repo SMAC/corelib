@@ -23,15 +23,13 @@ utilities.
 @license: GPLv3
 """
 
-# @TODO: Remove this. Hides the DeprecationWarnings of the cryptolibs of the
-# twisted framework.
-import warnings
-warnings.simplefilter("ignore", DeprecationWarning)
-
 COMMANDS_PKG = 'smac.core.management.commands'
 
 import smac.core.management.commands
+from smac.core.management import BaseOptions
+
 from twisted.python import usage, reflect
+
 import os.path
 import sys
 
@@ -69,7 +67,7 @@ def create_subcommands_definition():
     
     return definition
 
-class Options(usage.Options):
+class Options(BaseOptions):
     """
     Main command line parser configuration class.
     """

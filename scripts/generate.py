@@ -68,7 +68,7 @@ if __name__ == '__main__':
     os.environ['PYTHONPATH'] = "%s:%s" % (basedir, os.environ.get('PYTHONPATH', ''))
     
     if runall or 'thriftpython' in args:
-        os.system('thrift --gen py:twisted -r -o "%s" "%s"' % (os.path.join(basedir, 'smac'), os.path.join(basedir, 'smac', 'conf', 'specifications', 'api', 'all.thrift')))
+        os.system('thrift --gen py:new_style,twisted -r -o "%s" "%s"' % (os.path.join(basedir, 'smac'), os.path.join(basedir, 'smac', 'conf', 'specifications', 'api', 'all.thrift')))
         empty_dir(os.path.join(basedir, 'smac', 'api'))
         os.rename(os.path.join(basedir, 'smac', 'gen-py', 'smac', 'api'), os.path.join(basedir, 'smac', 'api'))
         empty_dir(os.path.join(basedir, 'smac', 'gen-py'))

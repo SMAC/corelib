@@ -32,7 +32,7 @@ from thrift.protocol.TBinaryProtocol import TBinaryProtocolFactory
 
 from smac.core.management.commands.run import startup_registry
 from smac.amqp.factory import AMQServerFactory
-from smac.utilities import merge_queues
+from smac.util import merge_queues
 
 Processor = startup_registry['processor']
 handler = startup_registry['handler']

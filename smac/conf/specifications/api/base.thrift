@@ -17,6 +17,37 @@
 
 namespace py smac.api.base
 
+#############################################################
+# Date/Time related types                                   #
+#############################################################
+
+struct Time {
+    // @TODO    
+}
+
+struct Date {
+    // @TODO
+}
+
+struct Datetime {
+    // @TODO
+}
+
+/**
+ * An object representing the difference between two date, time or datetime objects.
+ * The name and ordering of the attributes is compatible with the python datetime.timedelta
+ * internal class structure.
+ */
+struct TimeDelta {
+    1: optional i32 days
+    2: optional i32 seconds
+    3: optional i32 microseconds
+}
+
+#############################################################
+# Module addressing and information                         #
+#############################################################
+
 struct ModuleAddress {
     1: string instance_id
     2: string implementation
@@ -30,85 +61,60 @@ struct GeneralModuleInfo {
     3: string hostname
 }
 
-/**
- * The base external API for each module
- */
+exception InvalidModule {
+    1: ModuleAddress module
+}
+
+#############################################################
+# Task handling                                             #
+#############################################################
+ 
+typedef i64 TaskID
+
+enum TaskType {
+    DETERMINED
+    UNDETERMINED
+}
+
+enum TaskStatus {
+    RUNNING
+    FAILED
+    PAUSED
+    CANCELLED
+    COMPLETED
+}
+
+struct Task {
+    1: TaskID id,
+    2: TaskType type,
+    3: TaskStatus status,
+    4: string status_text,
+    5: ModuleAddress module,
+    6: optional double completed,
+    7: optional TimeDelta remaining,
+}
+
+exception InvalidTask {
+    1: TaskID task_id
+}
+
+#############################################################
+# Base services                                             #
+#############################################################
+
 service Module {
     /**
      * Asynchronous ping to be used by a broadcast message
      */
-    oneway void announce(1: GeneralModuleInfo info)
-}
-
-
-    /**
-     * Gets the status of the current service offered by the module.
-     * The current implementation returns a struct with the load average.
-     */
-    //Status get_status(),
+    oneway void announce(1: GeneralModuleInfo info),
     
     /**
-     * Gets the status of the task identified by the task_id parameter or the
-     * current task if not provided
+     * Getter for informations about a specific task
      */
-    //TaskStatus get_task_status(1: i32 task_id=0) throws (1: UnknownTask e),
+    Task get_task(1: TaskID id) throws (1: InvalidTask invalid),
     
     /**
-     * Stops the task identified by the task_id parameter or the current task
-     * if not provided
+     * Returns a list of all task actually running on this module
      */
-    //void stop_task(1: i32 task_id=0) throws (1: UnknownTask e),
-    
-    /**
-     * Restarts the module.
-     */
-    //void restart(),
-    
-    /**
-     * Starts the log streaming to the logs exchange, adding the id to the
-     * subscribers list.
-     */
-    //void start_log_streaming(1: string stream_id),
-    
-    /**
-     * Stops the log streaming for the given id. When the subscribed id
-     * list reaches 0 length, the stop_log_streaming commands effectively
-     * stops the streaming.
-     */
-    //void stop_log_streaming(1: string stream_id),
-//}
-/*
-struct Status {
-    1: double load_average1
-    2: double load_average5
-    3: double load_average15
-    4: i32 uptime
+    list<Task> get_tasks(),
 }
-
-struct DetailedModuleInfo {
-    1: GeneralModuleInfo general
-    2: Status status
-    3: map<string,string> additional
-}
-
-struct TaskStatus {
-    1: i32 task_id
-    2: i16 percent_completed
-    3: i32 time_elapsed
-    4: i32 time_expected
-    5: string message
-}
-
-exception UnknownTask {
-    1: i32 task_id
-}
-
-exception UnknownModule {
-    1: ModuleAddress module
-}
-
-exception NotYetReady {
-    1: i16 suggested_retry_delay
-}
-
-exception StreamingNotStarted {}*/

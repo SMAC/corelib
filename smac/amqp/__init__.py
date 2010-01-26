@@ -24,6 +24,13 @@ adapters to be used throughout the whole SMAC core library.
 """
 
 RESPONSES = 0
+"""ID for the 'RESPONSES' exchange."""
+
 UNICAST = 1
+"""ID for the 'UNICAST' exchange."""
+
 BROADCAST = 2
+"""ID for the 'BROADCAST' exchange."""
+
 SERVICES = 3
+"""ID for the 'SERVICES' exchange."""

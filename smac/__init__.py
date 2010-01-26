@@ -27,10 +27,12 @@ G{packagetree}
 """
 
 VERSION = "2.0.0.1"
-"""The full version of this release. The scheme represented by the version
+"""
+The full version of this release. The scheme represented by the version
 number is defined as follows: I{C{major.minor.build.revision}}
 For more information about the various build values look at the constants
-defined by the L{Version} class."""
+defined by the L{Version} class.
+"""
 
 class Version(object):
     """
@@ -38,16 +40,29 @@ class Version(object):
     access to every single property.
     """
     
+    MAJOR, MINOR, BUILD, REVISION = range(4)
+    """
+    The meaning of the single numbers appearing in the full version number.
+    
+     * MAJOR: The major version number of the release
+     * MINOR: The minor version number of the release
+     * BUILD: The actual build number of the release
+     * REVISION: The current revision number for the release
+     
+    @group: MAJOR, MINOR, BUILD, REVISION
+    """
+    
     DEVELOPMENT, ALPHA, BETA, CANDIDATE, PUBLIC = range(5)
-    """The various build values.
+    """
+    The various build values.
     
      * DEVELOPMENT: Release intended for developers of the project
      * ALPHA: Release targeted to developers testing
      * BETA: Release targeted to community testing
      * CANDIDATE: Release candidate, soon to be released as public
      * PUBLIC: Stable public release targeted to deployment environments
-     
-     @group: DEVELOPMENT, ALPHA, BETA, CANDIDATE, PUBLIC
+    
+    @group: DEVELOPMENT, ALPHA, BETA, CANDIDATE, PUBLIC
     """
     
     BUILD_STRINGS = (
@@ -57,8 +72,9 @@ class Version(object):
         ('rc', 'release candidate'),
         ('', 'public release'),
     )
+    
     """
-    The string representation of the build status defined by the class.
+    The string representation of the build statuses defined by the class.
     """
     
     def __init__(self, version):
@@ -75,37 +91,38 @@ class Version(object):
         
         assert len(self._scheme) == 4, 'Invalid scheme'
         
-        assert 0 <= self._scheme[2] < 5, 'Invalid build ID'
+        assert 0 <= self._scheme[Version.BUILD] < len(Version.BUILD_STRINGS), \
+                'Invalid build ID'
     
     @property
     def major(self):
         """Major version number"""
-        return self._scheme[0]
+        return self._scheme[Version.MAJOR]
     
     @property
     def minor(self):
         """Minor version number"""
-        return self._scheme[1]
+        return self._scheme[Version.MINOR]
     
     @property
     def build(self):
         """Build ID (0 to 4)"""
-        return self._scheme[2]
+        return self._scheme[Version.BUILD]
     
     @property
     def revision(self):
         """Revision number"""
-        return self._scheme[3]
+        return self._scheme[Version.REVISION]
     
     @property
     def build_string(self):
         """Long build string representation"""
-        return Version.BUILD_STRINGS[self._scheme[2]][1]
+        return Version.BUILD_STRINGS[self._scheme[Version.BUILD]][1]
     
     @property
     def build_abbr(self):
         """Short build string representation"""
-        return Version.BUILD_STRINGS[self._scheme[2]][0]
+        return Version.BUILD_STRINGS[self._scheme[Version.BUILD]][0]
     
     def __str__(self):
         """Prints the original version string"""
