@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+include "types.thrift"
 include "base.thrift"
 include "logger.thrift"
 
@@ -37,15 +38,15 @@ service Controller extends base.Module {
     # Controller - Web client interface                         #
     #############################################################
     
-    list<base.GeneralModuleInfo> module_list(),
+    list<types.GeneralModuleInfo> module_list(),
     
-    void request_log_streaming(1: base.ModuleAddress module) throws (1: base.InvalidModule no_module),
+    void request_log_streaming(1: types.ModuleAddress module) throws (1: types.InvalidModule no_module),
     
-    list<logger.LogFile> get_log_list(1: base.ModuleAddress logger),
+    list<logger.LogFile> get_log_list(1: types.ModuleAddress logger),
     
-    string get_log(1: base.ModuleAddress logger, 2: logger.LogFile logfile),
+    string get_log(1: types.ModuleAddress logger, 2: logger.LogFile logfile),
     
-    list<base.Task> get_tasks(),
+    list<types.Task> get_tasks(),
     
     
     #############################################################
@@ -56,13 +57,13 @@ service Controller extends base.Module {
      * Used when the controller registers itself on the services exchange to
      * stream a log to the client.
      */
-    oneway void receive_startup_log(1: base.ModuleAddress sender, 2: string entries),
-    oneway void receive_log_entry(1: base.ModuleAddress sender, 2: string entry),
-    oneway void receive_shutdown_log(1: base.ModuleAddress sender, 2: string entries),
+    oneway void receive_startup_log(1: types.ModuleAddress sender, 2: string entries),
+    oneway void receive_log_entry(1: types.ModuleAddress sender, 2: string entry),
+    oneway void receive_shutdown_log(1: types.ModuleAddress sender, 2: string entries),
     
     /**
      * Callback used by the modules to notify a task update to the controller.
      */
-    oneway void update_task(1: base.Task task),
+    oneway void update_task(1: types.Task task),
     
 }

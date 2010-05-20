@@ -17,21 +17,13 @@
 
 include "types.thrift"
 
-namespace py smac.api.base
+namespace py smac.api.frontend
 
-service Module {
-    /**
-     * Asynchronous ping to be used by a broadcast message
-     */
-    oneway void announce(1: types.GeneralModuleInfo info),
-    
-    /**
-     * Getter for informations about a specific task
-     */
-    types.Task get_task(1: types.TaskID id) throws (1: types.InvalidTask invalid),
-    
-    /**
-     * Returns a list of all task actually running on this module
-     */
-    list<types.Task> get_tasks(),
+service Modules {
+    void announced(1: types.GeneralModuleInfo module),
+    void gone(1: types.ModuleAddress addr),
+}
+
+service Tasks {
+     oneway void update(1: types.Task task),
 }
