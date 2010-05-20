@@ -1,6 +1,5 @@
 from twisted.internet.reactor import callLater
 from observer import Observable
-from zope.interface import implements
 
 class TimedSet(set, Observable):
     """docstring for TimedSet"""
@@ -25,4 +24,3 @@ class TimedSet(set, Observable):
             self.notify_observers('added', value)
             r = callLater(self.timeout, self.discard, value)
             self.removers[value] = r
-        

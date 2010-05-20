@@ -65,6 +65,10 @@ class Options(BaseOptions):
                   "parameter or make sure a 'settings.json' file is", \
                   "present in the current working directory.\n"
             raise usage.UsageError("Provide a valid path to a settings file")
+            
+        # Change the working directory to the module directory. This allows for
+        # relative file references from the module code/configuration.
+        os.chdir(os.path.dirname(self['settings']))
 
 class Command(object):
     implements(ICommand)
@@ -119,6 +123,9 @@ class Command(object):
         
         config = twistd.ServerOptions()
         config.parseOptions(['--pidfile={0}.pid'.format(id), '-noy', runner])
+        
+        # Set the terminal title
+        print "\x1b]2;{0} {1}\x07".format(handler.implementation, id)
         
         print "Initialization succeded, passing control to twistd\n"
         

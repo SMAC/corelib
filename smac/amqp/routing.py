@@ -1,5 +1,5 @@
 from collections import namedtuple
-from smac.api.base.ttypes import ModuleAddress
+from smac.api.ttypes import ModuleAddress
 
 class Address(namedtuple('Address', 'namespace, interface, implementation, instance_id, key')):
     def chunks(self):

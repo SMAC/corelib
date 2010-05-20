@@ -1,8 +1,7 @@
 from zope.interface import Attribute, implements
 from smac.util.observer import IObservable, Observable
 
-from smac.api.base.ttypes import TaskType, TaskStatus, TimeDelta
-from smac.api.base.ttypes import Task as ThriftTask
+from smac.api.ttypes import TaskType, TaskStatus, TimeDelta, Task as ThriftTask
 
 from twisted.python import components
 

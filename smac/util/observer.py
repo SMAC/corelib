@@ -15,23 +15,23 @@ class Observable(object):
     
     observers = {}
     
-    def add_observer(self, method, signal=None):
+    def add_observer(self, callback, signal=None):
         if signal is None:
             signal = 'global'
         
         if signal not in self.observers:
             self.observers[signal] = set()
         
-        self.observers[signal].add(method)
+        self.observers[signal].add(callback)
     
-    def remove_observer(self, method, signal=None):
+    def remove_observer(self, callback, signal=None):
         if signal is None:
             signal = 'global'
         
         if signal not in self.observers:
             return
         
-        self.observers[signal].discard(method)
+        self.observers[signal].discard(callback)
     
     def notify_observers(self, signal=None, *args, **kwargs):
         if signal is None:

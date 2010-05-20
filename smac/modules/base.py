@@ -37,7 +37,7 @@ from twisted.internet.defer import inlineCallbacks
 from smac.modules.imodule import IModule
 from smac.amqp.routing import Address
 from smac.amqp import UNICAST, BROADCAST, RESPONSES, SERVICES
-from smac.api.base.ttypes import GeneralModuleInfo, ModuleAddress, InvalidTask
+from smac.api.ttypes import GeneralModuleInfo, ModuleAddress, InvalidTask
 from smac.api.logger.constants import LOGGER_ROUTING_KEY
 from smac.contrib.twisted.log import TxAMQPLoggingObserver
 from smac.util.hooks import execute_hook, register
