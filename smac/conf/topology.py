@@ -28,7 +28,7 @@ took place:
  - {namespace} is replaced with the namespace of the system (usually 'smac')
  - {interface} is replaced with the actual interface of the module
  - {implementation} is replaced with the actual implementation of the module
- - {instance_id} is replaced with the actual id of the module instance
+ - {instance} is replaced with the actual id of the module instance
 
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
 @organization: EIA-FR <http://www.eia-fr.ch>
@@ -36,28 +36,44 @@ took place:
 @license: GPLv3
 """
 
-from smac.conf import queue, exchange
-from smac.amqp import UNICAST, BROADCAST, RESPONSES, SERVICES
+def exchange(name, type='direct'):
+    return {
+        'name': name,
+        'type': type
+    }
 
-EXCHANGES = (
-    exchange(RESPONSES, '{namespace}.responses', 'direct'),
-    exchange(UNICAST, '{namespace}.unicast', 'direct'),
-    exchange(BROADCAST, '{namespace}.broadcast', 'direct'),
-    exchange(SERVICES, '{namespace}.services', 'topic'),
-)
+def queue(name, bindings, extra=None):
+    if extra is None:
+        extra = {}
+    extra.update({
+        'name': name,
+        'bindings': bindings,
+    })
+    
+    return extra
 
-QUEUES = (
+def binding(exchange, routing_key):
+    return (exchange, routing_key)
+
+exchanges = {
+    'responses': exchange('amq.direct'),
+    'unicast': exchange('{namespace}.unicast'),
+    'broadcast': exchange('{namespace}.broadcast'),
+    'services': exchange('{namespace}.services', 'topic'),
+}
+
+queues = (
     queue('{namespace}.unicast.interface.{interface}', (
-        (UNICAST, '{namespace}.{interface}'),
+        binding('unicast', '{namespace}.{interface}'),
     )),
     queue('{namespace}.unicast.implementation.{interface}.{implementation}', (
-        (UNICAST, '{namespace}.{interface}.{implementation}'),
+        binding('unicast', '{namespace}.{interface}.{implementation}'),
     )),
-    queue(None, (
-            (UNICAST, '{namespace}.{interface}.{implementation}.{instance_id}'),
-            (BROADCAST, '{namespace}'),
-            (BROADCAST, '{namespace}.{interface}'),
-            (BROADCAST, '{namespace}.{interface}.{implementation}'),
+    queue('', (
+            binding('unicast', '{namespace}.{interface}.{implementation}.{instance}'),
+            binding('broadcast', '{namespace}'),
+            binding('broadcast', '{namespace}.{interface}'),
+            binding('broadcast', '{namespace}.{interface}.{implementation}'),
         ), extra={
             'exclusive': True,
             'auto_delete': True

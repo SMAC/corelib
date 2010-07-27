@@ -3,7 +3,6 @@ def merge_queues(additional):
         return
     
     from smac.conf import topology
-    from smac.amqp import RESPONSES, UNICAST, BROADCAST, SERVICES
     
     for queue in additional:
         queues = filter(lambda q: q['name']==queue.queue, topology.QUEUES)

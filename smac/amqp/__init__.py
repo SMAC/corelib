@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Collection of AMQP utilities such as connectory, interfaces, factories and 
+Collection of AMQP utilities such as connectors, interfaces, factories and 
 adapters to be used throughout the whole SMAC core library.
 
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
@@ -23,14 +23,4 @@ adapters to be used throughout the whole SMAC core library.
 @license: GPLv3
 """
 
-RESPONSES = 0
-"""ID for the 'RESPONSES' exchange."""
 
-UNICAST = 1
-"""ID for the 'UNICAST' exchange."""
-
-BROADCAST = 2
-"""ID for the 'BROADCAST' exchange."""
-
-SERVICES = 3
-"""ID for the 'SERVICES' exchange."""

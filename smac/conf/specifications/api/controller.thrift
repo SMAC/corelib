@@ -48,6 +48,17 @@ service Controller extends base.Module {
     
     list<types.Task> get_tasks(),
     
+    string setup_session(
+        1: string session
+    ) throws (
+        1: types.InvalidSetup invalid,
+        2: types.SetupNotReady notready
+    ),
+    
+    void start_recording(1: string session_id),
+    void stop_recording(1: string session_id),
+    void archive(1: string session_id),
+    
     
     #############################################################
     # Controller - Modules interface                            #

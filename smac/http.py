@@ -1,5 +1,5 @@
 from twisted.web.client import getPage
-
+from twisted.python import log
 from thrift.protocol.TBinaryProtocol import TBinaryProtocolFactory
 from thrift.transport.TTransport import TTransportBase, TMemoryBuffer
 
@@ -44,7 +44,8 @@ class HTTPTransport(TTransportBase):
         method(iprot, mtype, rseqid)
         
     def _error(self, failure):
-        print "Error!"
+        log.msg("Failure executing remote Thrift call over HTTP, error follows:")
+        log.err(failure)
         return failure
 
 class HTTPClientFactory(object):

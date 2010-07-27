@@ -111,3 +111,12 @@ struct Task {
     6: optional double completed,
     7: optional TimeDelta remaining,
 }
+
+#############################################################
+# Acquisition                                               #
+#############################################################
+
+exception InvalidSetup {
+}
+exception SetupNotReady {
+}

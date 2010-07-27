@@ -25,12 +25,10 @@ handling, including authentication, queue creation and so on.
 
 from thrift.protocol import TBinaryProtocol
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks, returnValue, DeferredList
 from twisted.python import log
 
 from txamqp import queue
-
-from smac.amqp import RESPONSES
 
 class Dispatcher(object):
     """
@@ -68,13 +66,17 @@ class Dispatcher(object):
     def remove_binding(self, queue):
         yield self.channel.queue_delete()
     
+    def remove_queues(self):
+        return DeferredList([self.channel.queue_delete(queue=q.queue) for q in self.queues])
+    
     @inlineCallbacks
     def set_up_exchanges(self, exchanges, kws):
-        for e in exchanges:
-            name = e['name'].format(**kws)
-            log.msg("Declaring exchange '{0}'".format(name))
-            yield self.channel.exchange_declare(exchange=name, type=e['type'])
-            self.exchanges[e['id']] = name
+        for ex in exchanges.values():
+            ex.format_name(**kws)
+            if ex.name.split('.', 1)[0] != 'amq':
+                log.msg("Declaring exchange '{0}'".format(ex.name))
+                yield ex.declare(self.channel)
+        self.exchanges = exchanges
     
     @inlineCallbacks
     def set_up_queues(self, queues, kws):
@@ -86,8 +88,8 @@ class Dispatcher(object):
             else:
                 name = ''
                 
-            log.msg("Declaring queue '{0}'".format(name))
             queue = yield self.channel.queue_declare(queue=name, **q['extra'])
+            log.msg("Declared queue '{0}'".format(queue.queue))
             
             self.queues.append(queue)
             
@@ -98,23 +100,13 @@ class Dispatcher(object):
                 e = self.exchanges[b[0]]
                 rk = b[1].format(**kws)
                 
-                log.msg("--> Binding to '{0}' with routing key '{1}'".format(e, rk))
+                log.msg("Binding '{0}' to '{1}' with routing key '{2}'".format(queue.queue, e, rk))
                 
-                yield self.channel.queue_bind(queue=queue.queue, exchange=e, routing_key=rk)
+                yield self.channel.queue_bind(queue=queue.queue, exchange=e.name, routing_key=rk)
             
     @inlineCallbacks
-    def set_up(self, channel, exchanges, queues, namespace, interface,
-            implementation, instance_id):
-        
+    def set_up(self, channel, exchanges, queues, **kws):
         self.channel = channel
-        
-        kws = {
-            'namespace': namespace,
-            'interface': interface,
-            'implementation': implementation,
-            'instance_id': instance_id,
-        }
-        
         yield self.set_up_exchanges(exchanges, kws)
         yield self.set_up_queues(queues, kws)
     
@@ -124,7 +116,7 @@ class Dispatcher(object):
         q = yield self.client.queue(r.consumer_tag)
         d = q.get()
         d.addCallback(self.client.parseServerMessage, self.channel,
-                self.exchanges[RESPONSES], q, processor, pfactory, pfactory)
+                self.exchanges['responses'].name, q, processor, pfactory, pfactory)
         d.addErrback(self.handle_closed_queue, queue)
         
     @inlineCallbacks

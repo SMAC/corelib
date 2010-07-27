@@ -28,11 +28,10 @@ parameter.
 
 from twisted.python import usage
 
-from zope.interface import implements, providedBy
+from zope.interface import implements, implementedBy
 
 from smac.core.management import ICommand, BaseOptions
-from smac.conf import Settings
-from smac.modules import get_class_instance, get_processor_for_interface
+from smac import conf
 
 import os
 import sys
@@ -78,16 +77,17 @@ class Command(object):
     def execute(self, settings, id):
         print "Starting module from {0} with ID {1}".format(settings, id)
         
-        s = Settings.from_file(settings)
+        conf.settings = conf.Settings.from_file(settings)
         
-        # Install the chosen reactor (look at settings.reactor)
+        # @todo: Install the chosen reactor (look at settings.reactor)
+        #from twisted.internet import reactor
         from twisted.internet.selectreactor import install
         reactor = install()
         
         sys.path.insert(0, os.path.dirname(settings))
         
         # The module should now be on the path, let's search for it.
-        from smac.modules import base
+        from smac.modules import base, utils
         
         try:
             # The get_class_instance function loads the 'implementation'
@@ -96,7 +96,7 @@ class Command(object):
             # The 'implementation module should be defined by the SMAC module
             # and thus contained in the directory which we just inserted in
             # the path.
-            handler = get_class_instance(base.ModuleBase)
+            handler = utils.get_class(base.ModuleBase)
         except ImportError:
             print "The 'implementation' python module was not found."
             sys.exit(1)
@@ -106,15 +106,14 @@ class Command(object):
                   "found in the 'implementation' python module."
             sys.exit(1)
         
-        interface = list(providedBy(handler))[0]
-        processor = get_processor_for_interface(interface)
+        interface = list(implementedBy(handler))[0]
+        processor = utils.get_module_for_interface(interface)
         runner = os.path.join(os.path.dirname(base.__file__), 'runner.py')
         
         # Save the necessary variables in the global registry to be used by
         # the runner called by twisted.runApp()
         startup_registry['processor'] = processor
         startup_registry['handler'] = handler
-        startup_registry['settings'] = s
         startup_registry['instance_id'] = id
         
         # Initialize basic configuration of the twisted application runner
@@ -125,7 +124,7 @@ class Command(object):
         config.parseOptions(['--pidfile={0}.pid'.format(id), '-noy', runner])
         
         # Set the terminal title
-        print "\x1b]2;{0} {1}\x07".format(handler.implementation, id)
+        #print "\x1b]2;{0} {1}\x07".format(handler.implementation, id)
         
         print "Initialization succeded, passing control to twistd\n"
         

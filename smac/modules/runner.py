@@ -29,52 +29,41 @@ from twisted.application import service, internet
 
 from thrift.transport.TTwisted import ThriftServerFactory
 from thrift.protocol.TBinaryProtocol import TBinaryProtocolFactory
-
 from smac.core.management.commands.run import startup_registry
-from smac.amqp.factory import AMQServerFactory
 from smac.util import merge_queues
+from smac.conf import settings
+from smac.amqp.service import AMQService, ThriftAMQService
 
-Processor = startup_registry['processor']
-handler = startup_registry['handler']
-s = startup_registry['settings']
 
-##
-# Thrift processor
-##
-handler.settings = s
-handler.id = startup_registry['instance_id']
-processor = Processor(handler)
+processor = startup_registry['processor']
+handler = startup_registry['handler'](startup_registry['instance_id'])
 
-##
 # Twisted application
-##
 application = service.Application("SMAC module")
 serviceCollection = service.IServiceCollection(application)
 
-##
-# AMQP Client
-##
-merge_queues(s.additional_bindings)
-
-factory = AMQServerFactory(
-    processor,
-    s.amqp.spec,
-    s.amqp.vhost,
-    s.amqp.user,
-    s.amqp.password
+# AMQP Client service
+amqp_service = AMQService(
+    settings.amqp.spec,
+    settings.amqp.host,
+    settings.amqp.port,
+    settings.amqp.vhost,
+    settings.amqp.user,
+    settings.amqp.password,
+    settings.amqp.channel
 )
-amqp_service = internet.TCPClient(s.amqp.host, s.amqp.port, factory)
+amqp_service.setName("AMQ Connection layer")
 amqp_service.setServiceParent(serviceCollection)
 
-##
-# RPC Server
-##
-if s.rpc.run_server:
-    factory = ThriftServerFactory(processor, TBinaryProtocolFactory())
-    rpc_service = internet.TCPServer(s.rpc.port, factory)
+# AMQP Thrift service
+#merge_queues(settings.additional_bindings)
+thrift_service = ThriftAMQService(processor, handler)
+thrift_service.setServiceParent(amqp_service)
+
+# RPC Thrift service
+if settings.rpc.run_server:
+    factory = ThriftServerFactory(processor.Processor(handler), TBinaryProtocolFactory())
+    rpc_service = internet.TCPServer(settings.rpc.port, factory)
     rpc_service.setServiceParent(serviceCollection)
 
-##
-# @TODO
-# Use POSIX Local IPC Sockets for local-local communication
-##
+# @todo: Use POSIX Local IPC Sockets for local-local communication

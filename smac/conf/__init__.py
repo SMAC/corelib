@@ -24,6 +24,7 @@ SMAC project.
 """
 
 import json
+from os.path import realpath, join, dirname
 
 class Settings(object):
     """
@@ -278,16 +279,3 @@ class Settings(object):
     def __repr__(self):
         return repr(self.__dict__)
 
-def exchange(id, name, type):
-    return {
-        'id': id,
-        'name': name,
-        'type': type,
-    }
-
-def queue(name, bindings, extra={}):
-    return {
-        'name': name,
-        'bindings': bindings,
-        'extra': extra,
-    }

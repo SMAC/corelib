@@ -1,4 +1,5 @@
 import inspect
+from twisted.internet.defer import maybeDeferred, DeferredList
 
 def execute_hook(klass, name, *args, **kwargs):
     def registered(f):
@@ -7,7 +8,9 @@ def execute_hook(klass, name, *args, **kwargs):
         except AttributeError:
             return False
     
-    [m(*args, **kwargs) for _, m in inspect.getmembers(klass, registered)]
+    hooks = inspect.getmembers(klass, registered)
+    
+    return DeferredList([maybeDeferred(m, *args, **kwargs) for _, m in hooks])
 
 def register(hook):
     def inner(func):

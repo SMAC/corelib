@@ -45,7 +45,7 @@ def frontendapi(idlfile='controller.thrift frontend.thrift', format='py:new_styl
     builddir = p.join(env.base, _builddir(format), 'smac', 'api')
     
     # Ask for the destination directory, but provide a default
-    destdir = p.join(p.dirname(env.base), 'smac-controller-frontend', 'controller_frontend', 'api')
+    destdir = p.join(p.dirname(env.base), 'smac-controller-frontend', 'frontend', 'api')
     
     if not default:
         destdir = prompt("Please specify the frontend API location:", default=destdir)
@@ -60,7 +60,7 @@ def frontendapi(idlfile='controller.thrift frontend.thrift', format='py:new_styl
     
     # Update all namespaces
     oldns = 'smac.api'
-    newns = 'controller_frontend.api'
+    newns = 'frontend.api'
     
     for root, dirs, files in os.walk(builddir):
         for name in files:

@@ -16,11 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 include "types.thrift"
+include "recorder.thrift"
 
 namespace py smac.api.frontend
 
 service Modules {
     void announced(1: types.GeneralModuleInfo module),
+    void recorder_announced(1: types.GeneralModuleInfo module, 2: list<recorder.AcquisitionDevice> devices),
     void gone(1: types.ModuleAddress addr),
 }
 

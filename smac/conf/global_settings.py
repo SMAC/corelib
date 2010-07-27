@@ -18,10 +18,11 @@ reactor = 'default'
 
 amqp = {
     "vhost": "/", 
-    "host": "localhost", 
+    "host": "10.0.0.102", 
     "password": "guest", 
     "port": 5672, 
     "user": "guest",
+    "channel": 1,
     "namespace": 'smac',
     "spec": os.path.join(os.path.dirname(os.path.realpath(__file__)), 'specifications', 'amqp',
             'standard', 'amqp0-8.xml'),
@@ -32,7 +33,7 @@ rpc = {
     "port": 9090,
 }
 
-ping_interval = 2
+ping_interval = 3
 
 max_ping_interval = ping_interval * 3
 

@@ -26,10 +26,6 @@ really? ;-) to be recognized as a SMAC Module.
 from zope.interface import Interface, Attribute
 
 class IModule(Interface):
-    settings = Attribute("""The global settings object extended with the
-                            module local settings.
-                            @type: A L{Settings} instance.""")
-    
     channel = Attribute("""The actual AMQP client object used for the data
                            communication with the AMQ broker.
                            This attribute allows the reuse of the actual

@@ -21,9 +21,14 @@ namespace py smac.api.base
 
 service Module {
     /**
+     * Synchronous ping to be used to check that a module is still online.
+     */
+    void ping(),
+    
+    /**
      * Asynchronous ping to be used by a broadcast message
      */
-    oneway void announce(1: types.GeneralModuleInfo info),
+    oneway void announce(1: types.GeneralModuleInfo info, 2: i32 timestamp),
     
     /**
      * Getter for informations about a specific task
