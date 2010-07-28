@@ -1,4 +1,4 @@
-# Copyright (C) 2005-2009  MISG/ICTI/EIA-FR
+# Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,20 +22,21 @@ parameter.
 """
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
 @organization: EIA-FR <http://www.eia-fr.ch>
-@copyright: 2005-2009 MISG/ICTI/EIA-FR
+@copyright: 2005-2010 MISG/ICTI/EIA-FR
 @license: GPLv3
 """
 
-from twisted.python import usage
 
+import os
+import sys
+import inspect
+
+from twisted.python import usage
 from zope.interface import implements, implementedBy
 
 from smac.core.management import ICommand, BaseOptions
 from smac import conf
 
-import os
-import sys
-import inspect
 
 startup_registry = {}
 
@@ -124,9 +125,11 @@ class Command(object):
         config.parseOptions(['--pidfile={0}.pid'.format(id), '-noy', runner])
         
         # Set the terminal title
-        #print "\x1b]2;{0} {1}\x07".format(handler.implementation, id)
+        print "\x1b]2;SMAC Module - {0} {1}\x07".format(handler.__name__, id)
         
         print "Initialization succeded, passing control to twistd\n"
         
         # Run the selected module
         twistd.runApp(config)
+    
+

@@ -1,6 +1,6 @@
 #!/usr/bin/thrift --gen py:twisted
 
-# Copyright (C) 2005-2009  MISG/ICTI/EIA-FR
+# Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,17 +26,17 @@ service Module {
     void ping(),
     
     /**
-     * Asynchronous ping to be used by a broadcast message
+     * Asynchronous reverse ping to be broadcasted.
      */
-    oneway void announce(1: types.GeneralModuleInfo info, 2: i32 timestamp),
+    oneway void announce(1: string address),
     
     /**
      * Getter for informations about a specific task
      */
-    types.Task get_task(1: types.TaskID id) throws (1: types.InvalidTask invalid),
+    //types.Task get_task(1: types.TaskID id) throws (1: types.InvalidTask invalid),
     
     /**
      * Returns a list of all task actually running on this module
      */
-    list<types.Task> get_tasks(),
+    //list<types.Task> get_tasks(),
 }

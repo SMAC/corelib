@@ -1,73 +1,92 @@
-from smac.amqp.routing import IAddress
-from smac.amqp import factory
-from smac import amqp
-from smac.core.dispatcher import Dispatcher
-from smac.util.proxy import ProxyDeferred
+# Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Interfaces and base classes to extend to implement an generic SMAC module.
+
+@author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
+@organization: EIA-FR <http://www.eia-fr.ch>
+@copyright: 2005-2010 MISG/ICTI/EIA-FR
+@license: GPLv3
+"""
+
+
+from zope.interface import implements, Attribute, Interface, providedBy
+
+from smac.python import log
 from smac.modules import utils
-from smac.conf import settings
-from smac.conf.topology import queue, exchange
-from twisted.internet import defer
-from zope.interface import providedBy
 
-class RemoteService(object):
+
+class IModule(Interface):
     """
-    A remote module which holds a client attribute (for service calls) and the
-    actual address of the remote object.
-    
-    The client attribute is lazily created on the first request and uses a
-    C{ProxyDeferred} to be always useable without to wait for the callback to
-    fire. Refer to the C{ProxyDeferred} documentation for more information.
+    Most basic interface to be implemented by a module to be recognized as
+    such and to be adressable in a mixed environment.
     """
     
-    def __init__(self, address, distribution='unicast', client_class=None):
-        self.address = IAddress(address)
-        self.distribution = distribution
-        self.client_class = client_class
+    interface = Attribute("""Interface implemented by this module""")
     
-    @property
-    def client(self):
-        d = factory.client_factory.build_client(self.address, self.distribution, self.client_class)
-        self._client = ProxyDeferred(d)
-        self._client.addCallback(lambda c: setattr(self, '_client', c) or c)
+    implementation = Attribute("""Implementation of this module""")
+    
+    id = Attribute("""Instance ID of this module""")
+
+
+class Module(object):
+    """
+    A generic module on connected to a SMAC system through various interfaces
+    such as AMQP or RPC.
+    """
+    
+    implements(IModule)
+    
+    def __init__(self, id, implementation=None, interface=None):
+        """
+        Creates a new service handler for a generic module.
         
-        return self._client
+        @param id: The instance ID of this module on the system.
+        @param implementation: The interface specific implementation of this
+                               module. If the value is not provided, the class
+                               name will be used as default.
+        @param interface: The interface of this module. If the value is not
+                          provided, the module name of the last implemented
+                          interface is used.
+        """
+        self.id = id
+        
+        if not implementation:
+            implementation = utils.get_implementation_from_instance(self)
+            log.debug("Implementation guessed to be '{0}'".format(implementation))
+        self.implementation = implementation
+        
+        if not interface:
+            self.interface = utils.get_interface_from_instance(self)
+            log.debug("Interface guessed to be '{0}'".format(interface))
+        self.interface = interface
     
-    def __str__(self):
-        return str(self.address)
+    def ping(self):
+        """
+        The ping service method does not have to do any processing as it only
+        acts as a flag to mark this module as online.
+        """
     
-    def __repr__(self):
-        return '<%s remote object at %d>' % (self.address, id(self))
+    def announce(self, info):
+        """
+        Each method implements this method since each component is intended to
+        be able to announce itself to any other, but only specific module
+        implementations (such as controllers) react upon it.
+        """
     
 
-class LocalService(object):
-    
-    queues = (
-        queue('', (('services', '{routing_key}'),), extra={
-            'exclusive': True,
-            'auto_delete': True
-        }),
-    )
-    
-    def __init__(self, address, processor=None):
-        self.address = IAddress(address)
-        
-        if processor is None:
-            interface = list(providedBy(self))[0]
-            processor = utils.get_processor_for_interface(interface)
-        
-        self.processor = processor(self)
-        self.dispatcher = Dispatcher()
-    
-    @defer.inlineCallbacks
-    def setup(self):
-        self.channel = yield amqp.client.channel(settings.amqp.channel)
-        yield self.dispatcher.set_up(
-            self.channel, exchanges, self.queues,
-            namespace=self.address.namespace,
-            routing_key=self.address.routing_key()
-        )
-        yield self.dispatcher.listen(amqp.client, self.processor)
-    
-    def unbind(self):
-        return self.dispatcher.remove_queues()
 
+    

@@ -1,6 +1,6 @@
 #!/usr/bin/thrift --gen py:twisted
 
-# Copyright (C) 2005-2009  MISG/ICTI/EIA-FR
+# Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,10 +49,10 @@ struct TimeDelta {
 #############################################################
 
 struct ModuleAddress {
-    1: string instance_id
-    2: string implementation
-    3: string iface
-    4: string ns
+    1: string ns
+    2: string iface
+    3: string implementation
+    4: string instance_id
 }
 
 struct GeneralModuleInfo {
