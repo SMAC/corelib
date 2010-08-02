@@ -10,7 +10,7 @@ class TimedSet(set, Observable):
     
     def remove(self, value):
         super(TimedSet, self).remove(value)
-        self.notify_observers('removed', value)
+        self.notify('removed', value)
     
     def discard(self, value):
         if value in self:
@@ -21,6 +21,6 @@ class TimedSet(set, Observable):
             self.removers[value].reset(self.timeout)
         else:
             super(TimedSet, self).add(value)
-            self.notify_observers('added', value)
+            self.notify('added', value)
             r = callLater(self.timeout, self.discard, value)
             self.removers[value] = r

@@ -1,17 +1,5 @@
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 """
 Programmatic definition of the AMQP topology to use overall the inter-module
@@ -31,9 +19,6 @@ took place:
  - {instance} is replaced with the actual id of the module instance
 
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
-@organization: EIA-FR <http://www.eia-fr.ch>
-@copyright: 2005-2010 MISG/ICTI/EIA-FR
-@license: GPLv3
 """
 
 def exchange(name, type='direct'):
@@ -60,15 +45,22 @@ exchanges = {
     'unicast': exchange('{namespace}.unicast'),
     'broadcast': exchange('{namespace}.broadcast'),
     'services': exchange('{namespace}.services', 'topic'),
+    'tasks': exchange('{namespace}.tasks', 'topic'),
+    'transfers': exchange('{namespace}.transfers', 'direct'),
+    'sessions': exchange('{namespace}.sessions', 'direct'),
 }
 
 queues = (
     queue('{namespace}.unicast.interface.{interface}', (
         binding('unicast', '{namespace}.{interface}'),
-    )),
+    ), extra={
+        'auto_delete': True
+    }),
     queue('{namespace}.unicast.implementation.{interface}.{implementation}', (
         binding('unicast', '{namespace}.{interface}.{implementation}'),
-    )),
+    ), extra={
+        'auto_delete': True
+    }),
     queue('', (
             binding('unicast', '{namespace}.{interface}.{implementation}.{instance}'),
             binding('broadcast', '{namespace}'),

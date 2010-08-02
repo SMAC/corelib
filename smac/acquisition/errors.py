@@ -1,0 +1,3 @@
+
+class ModuleNotAvailable(Exception):
+    pass

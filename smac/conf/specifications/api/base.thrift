@@ -1,42 +1,47 @@
 #!/usr/bin/thrift --gen py:twisted
 
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 include "types.thrift"
+include "task.thrift"
+include "session.thrift"
 
 namespace py smac.api.base
 
-service Module {
+service AMQPService {}
+service RPCService {}
+
+service BaseModule extends AMQPService {
     /**
      * Synchronous ping to be used to check that a module is still online.
      */
     void ping(),
     
+    types.GeneralModuleInfo info(),
+    
     /**
      * Asynchronous reverse ping to be broadcasted.
      */
     oneway void announce(1: string address),
-    
-    /**
-     * Getter for informations about a specific task
-     */
-    //types.Task get_task(1: types.TaskID id) throws (1: types.InvalidTask invalid),
-    
+}
+
+
+service TaskModule extends BaseModule {
     /**
      * Returns a list of all task actually running on this module
      */
-    //list<types.Task> get_tasks(),
+    list<types.TaskID> tasks(),
+}
+
+
+service SessionModule extends TaskModule {
+    /**
+     * Configures a new session listener for the given section and prepares the
+     * module for the needed steps to perform the interface specific handling.
+     *
+     * This method can be called as many times as wanted and shall not cause
+     * collateral effects.
+     */
+    void configure_session(1: session.Session session),
 }

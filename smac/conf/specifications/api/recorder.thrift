@@ -1,28 +1,18 @@
 #!/usr/bin/thrift --gen py:twisted
 
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 include "types.thrift"
 include "base.thrift"
+include "task.thrift"
+include "session.thrift"
 
 namespace py smac.api.recorder
 
 enum StreamType {
-    VIDEO,
-    AUDIO,
+    VIDEO
+    AUDIO
     MUXED
 }
 
@@ -59,13 +49,13 @@ exception NotYetRecorded {
     1: string session_id
 }
 
-service Recorder extends base.Module {
+service Recorder extends base.SessionModule {
     
     /**
      * Lists all acquisition devices available on this recorder. Each device in
      * the list contains the list of its streams.
      */
-    list<AcquisitionDevice> get_acquisition_devices(),
+    list<AcquisitionDevice> acquisition_devices(),
     
     /**
      * Creates a new acquisition session coupled to this module with the given
@@ -75,7 +65,7 @@ service Recorder extends base.Module {
      * @raise:  InvalidConfiguration if the configuration can't be correctly
      *          applied to the current hardware setup
      */
-    void setup_session(1: string id, string configuration) throws (1: InvalidConfiguration invalid),
+    void session_configure(1: types.SessionID sessid, 2: types.Setup setup) throws (1: InvalidConfiguration invalid),
     
     /**
      * Starts the recording of a particular (configured) acquisition session.
@@ -84,7 +74,7 @@ service Recorder extends base.Module {
      *          configured with `create_local_acquisition_session`
      * @raise:  AlreadyRecording if a capture session is already running
      */
-    void start_recording(1: string session_id) throws (1: InvalidSessionID invalid, 2: AlreadyRecording busy),
+    void session_recording_start(1: types.SessionID sessid, 2: types.TaskID parent) throws (1: InvalidSessionID invalid, 2: AlreadyRecording busy),
     
     /**
      * Stops the recording of a particular (running) acquisition session.
@@ -93,7 +83,7 @@ service Recorder extends base.Module {
      *          configured with `create_local_acquisition_session`
      * @raise:  NotRecording if the given session_id is not currently running
      */
-    void stop_recording(1: string session_id) throws (1: InvalidSessionID invalid, 2: NotRecording free),
+    void session_recording_stop(1: types.SessionID session_id) throws (1: InvalidSessionID invalid, 2: NotRecording free),
     
-    void archive(1: string session_id) throws (1: InvalidSessionID invalid, 2: NotYetRecorded free),
+    void session_archive(1: types.SessionID sessid, 2: types.TaskID parent) throws (1: InvalidSessionID invalid, 2: NotYetRecorded free),
 }

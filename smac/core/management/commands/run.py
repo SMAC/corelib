@@ -1,17 +1,5 @@
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 """
 Runs a module.
@@ -21,9 +9,6 @@ parameter.
 """
 """
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
-@organization: EIA-FR <http://www.eia-fr.ch>
-@copyright: 2005-2010 MISG/ICTI/EIA-FR
-@license: GPLv3
 """
 
 
@@ -36,9 +21,12 @@ from zope.interface import implements, implementedBy
 
 from smac.core.management import ICommand, BaseOptions
 from smac import conf
+from smac.api.base import AMQPService, RPCService
 
 
-startup_registry = {}
+startup_registry = {
+    '__name__': __name__
+}
 
 class Options(BaseOptions):
     longdesc = __doc__
@@ -107,15 +95,31 @@ class Command(object):
                   "found in the 'implementation' python module."
             sys.exit(1)
         
-        interface = list(implementedBy(handler))[0]
-        processor = utils.get_module_for_interface(interface)
-        runner = os.path.join(os.path.dirname(base.__file__), 'runner.py')
+        def amqp_service(interface):
+            return interface.extends(AMQPService.Iface)
+        
+        def rpc_service(interface):
+            return interface.extends(RPCService.Iface)
+        
+        amqp_interface = filter(amqp_service, list(implementedBy(handler)))[0]
+        amqp_processor = utils.get_module_for_interface(amqp_interface)
+        
+        try:
+            rpc_interface = filter(rpc_service, list(implementedBy(handler)))[0]
+        except IndexError:
+            pass
+        else:
+            rpc_processor = utils.get_module_for_interface(rpc_interface)
+            startup_registry['rpc_processor'] = rpc_processor
         
         # Save the necessary variables in the global registry to be used by
         # the runner called by twisted.runApp()
-        startup_registry['processor'] = processor
+        startup_registry['amqp_processor'] = amqp_processor
         startup_registry['handler'] = handler
         startup_registry['instance_id'] = id
+        startup_registry['__name__'] = '__main__'
+        
+        runner = os.path.join(os.path.dirname(base.__file__), 'runner.py')
         
         # Initialize basic configuration of the twisted application runner
         # @TODO: Move this to the `smac run` command

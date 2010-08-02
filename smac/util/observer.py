@@ -1,13 +1,13 @@
 from zope.interface import Interface, implements
 
 class IObservable(Interface):
-    def add_observer(method, signal=None):
+    def subscribe(method, signal=None):
         """Adds an observer to this instance"""
     
-    def remove_observer(method, signal=None):
+    def unsubscribe(method, signal=None):
         """Removes the specified observer from the instance"""
     
-    def notify_observers(signal=None, *args, **kwargs):
+    def notify(signal=None, *args, **kwargs):
         """Notifies all registered observers of a change to the class"""
     
 class Observable(object):
@@ -15,7 +15,7 @@ class Observable(object):
     
     observers = {}
     
-    def add_observer(self, callback, signal=None):
+    def subscribe(self, callback, signal=None):
         if signal is None:
             signal = 'global'
         
@@ -24,7 +24,7 @@ class Observable(object):
         
         self.observers[signal].add(callback)
     
-    def remove_observer(self, callback, signal=None):
+    def unsubscribe(self, callback, signal=None):
         if signal is None:
             signal = 'global'
         
@@ -33,7 +33,7 @@ class Observable(object):
         
         self.observers[signal].discard(callback)
     
-    def notify_observers(self, signal=None, *args, **kwargs):
+    def notify(self, signal=None, *args, **kwargs):
         if signal is None:
             signal = 'global'
         

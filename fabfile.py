@@ -6,6 +6,24 @@ import os
 
 env.base = p.dirname(__file__)
 
+def doc():
+    """
+    Generate all documentation for the project
+    """
+    epydoc()
+    sphinxdoc()
+    thriftdoc()
+
+def thriftdoc():
+    pass
+
+def epydoc():
+    pass
+
+def sphinxdoc():
+    pass
+
+
 def _rm(file):
     """
     Removes the specified directory and all its content without asking for

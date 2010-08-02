@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+    xmlns="http://smac.hefr.ch"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:smac="http://smac.hefr.ch"
+    targetNamespace="http://smac.hefr.ch"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+    
+    <xs:include schemaLocation="commons.xsd"/>
+    
+    <xs:complexType name="declaration">
+        <xs:attribute name="recorder" type="xs:NCName" use="required"/>
+        <xs:attribute name="device" type="xs:NCName" use="required"/>
+        <xs:attribute name="stream" type="xs:NCName" use="required"/>
+        <xs:attribute name="as" type="xs:ID" use="required"/>
+    </xs:complexType>
+    
+    <xs:complexType name="toplevelProcessorInstance">
+        <xs:complexContent>
+            <xs:restriction base="smac:externalProcessorInstance">
+                <xs:attribute name="as" type="xs:ID" use="required"/>
+            </xs:restriction>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:complexType name="strongSignal">
+        <xs:complexContent>
+            <xs:restriction base="signal">
+                <xs:attribute name="target" type="xs:IDREF" use="required"/>
+            </xs:restriction>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:complexType name="toplevelConnection">
+        <xs:sequence>
+            <xs:element name="source" type="strongSignal"/>
+            <xs:element name="destination" type="signal"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="acquisitionSetup">
+        <xs:sequence>
+            <xs:element name="use" type="declaration" maxOccurs="unbounded" minOccurs="0" />
+            <xs:element name="instantiate" type="toplevelProcessorInstance" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="connect" type="toplevelConnection" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:element name="setup" type="acquisitionSetup"/>
+</xs:schema>

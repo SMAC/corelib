@@ -1,23 +1,13 @@
 #!/usr/bin/thrift --gen py:twisted
 
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 include "types.thrift"
 include "base.thrift"
 include "logger.thrift"
+include "session.thrift"
+include "task.thrift"
 
 namespace py smac.api.controller
 
@@ -32,34 +22,7 @@ const i32 LOG_REQUEST_TIMEOUT = 45
  *    administration interface interact with the controller (and thus with the
  *    whole system)
  */
-service Controller extends base.Module {
-    
-    #############################################################
-    # Controller - Web client interface                         #
-    #############################################################
-    
-    list<types.GeneralModuleInfo> module_list(),
-    
-    void request_log_streaming(1: types.ModuleAddress module) throws (1: types.InvalidModule no_module),
-    
-    list<logger.LogFile> get_log_list(1: types.ModuleAddress logger),
-    
-    string get_log(1: types.ModuleAddress logger, 2: logger.LogFile logfile),
-    
-    list<types.Task> get_tasks(),
-    
-    string setup_session(
-        1: string session
-    ) throws (
-        1: types.InvalidSetup invalid,
-        2: types.SetupNotReady notready
-    ),
-    
-    void start_recording(1: string session_id),
-    void stop_recording(1: string session_id),
-    void archive(1: string session_id),
-    
-    
+service Controller extends base.TaskModule {
     #############################################################
     # Controller - Modules interface                            #
     #############################################################
@@ -71,10 +34,37 @@ service Controller extends base.Module {
     oneway void receive_startup_log(1: types.ModuleAddress sender, 2: string entries),
     oneway void receive_log_entry(1: types.ModuleAddress sender, 2: string entry),
     oneway void receive_shutdown_log(1: types.ModuleAddress sender, 2: string entries),
-    
-    /**
-     * Callback used by the modules to notify a task update to the controller.
-     */
-    oneway void update_task(1: types.Task task),
-    
 }
+
+
+
+service ControllerFrontend extends base.RPCService {
+    map<types.SessionID,session.Basic> session_get_active(),
+    types.SessionID session_create(1: string title, 2: types.Setup setup),
+    types.SessionID session_create(1: string title, 2: types.Setup setup),
+    session.Session session_get(1: types.SessionID sessid),
+    void            session_meta_save(1: types.SessionID sessid, 2: session.Meta meta),
+    types.TaskID    session_recording_start(1: types.SessionID sessid)
+    void            session_recording_stop(1: types.SessionID sessid)
+    types.TaskID    session_archive(1: types.SessionID sessid)
+    
+    
+    void request_log_streaming(1: types.ModuleAddress module) throws (1: types.InvalidModule no_module),
+    list<logger.LogFile> get_log_list(1: types.ModuleAddress logger),
+    string get_log(1: types.ModuleAddress logger, 2: logger.LogFile logfile),
+    
+    string setup_session(
+        1: string session
+    ) throws (
+        1: types.InvalidSetup invalid,
+        2: types.SetupNotReady notready
+    ),
+    
+    void start_recording(1: string session_id),
+    void stop_recording(1: string session_id),
+    void archive(1: string session_id),
+}
+
+
+
+

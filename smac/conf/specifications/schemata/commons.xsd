@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:smac="http://smac.hefr.ch"
+    xmlns="http://smac.hefr.ch"
+    targetNamespace="http://smac.hefr.ch"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+    
+    <xs:simpleType name="media">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="AUDIO"></xs:enumeration>
+            <xs:enumeration value="VIDEO"></xs:enumeration>
+            <xs:enumeration value="MUXED"></xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:complexType name="boundSignal">
+        <xs:attribute name="id" type="xs:NCName" use="required" />
+        <xs:attribute name="label" type="xs:string" use="optional" />
+        <xs:attribute name="media" type="media" use="required" />
+    </xs:complexType>
+    
+    <xs:complexType name="signal">
+        <xs:attribute name="target" type="xs:NCName" use="optional" />
+        <xs:attribute name="signal" type="xs:NCName" use="optional" />
+    </xs:complexType>
+    
+    <xs:complexType name="connection">
+        <xs:sequence>
+            <xs:element name="source" type="signal"/>
+            <xs:element name="destination" type="signal"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="implementation">
+        <xs:sequence>
+            <xs:element name="instantiate" type="internalProcessorInstance" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element name="connect" type="connection" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="externalProcessorInstance">
+        <xs:attribute name="as" type="xs:NCName" use="required" />
+        <xs:attribute name="class" type="xs:NCName" use="required" />
+    </xs:complexType>
+    
+    <xs:complexType name="internalProcessorInstance">
+        <xs:complexContent>
+            <xs:restriction base="smac:externalProcessorInstance">
+                <xs:attribute name="class" type="xs:IDREF" use="required"/>
+            </xs:restriction>
+        </xs:complexContent>
+    </xs:complexType>
+    
+</xs:schema>

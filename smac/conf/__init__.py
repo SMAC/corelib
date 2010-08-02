@@ -1,26 +1,11 @@
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 """
 A collection of configuration management utilities to be used all over the
 SMAC project.
 
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
-@organization: EIA-FR <http://www.eia-fr.ch>
-@copyright: 2005-2010 MISG/ICTI/EIA-FR
-@license: GPLv3
 """
 
 import json
@@ -178,7 +163,7 @@ class Settings(object):
             return
         
         if not global_settings:
-            import smac.conf.global_settings as sett
+            import global_settings as sett
             
             valid = (s for s in dir(sett) if not s.startswith(('_', '.')))
             global_settings = Settings(dict((s, getattr(sett, s)) for s in valid))
@@ -233,7 +218,7 @@ class Settings(object):
         @type  indent: C{int} or C{None}
         
         @see: the U{python json
-              module<http://docs.python.org/library/json.html#basic-usage>}
+              module<http://docs.python.org/library/json.html>}
               documentation for further information about the indent level.
         """
         json.dump(self.to_dict(), stream, indent=indent)
@@ -251,11 +236,10 @@ class Settings(object):
         @type  indent: C{int} or C{None}
         
         @see: the U{python json
-              module<http://docs.python.org/library/json.html#basic-usage>}
+              module<http://docs.python.org/library/json.html>}
               documentation for further information about the indent level.
         """
-        f = open(pathname, 'w')
-        self.to_stream(f, indent)
+        self.to_stream(open(pathname, 'w'), indent)
     
     def to_string(self, indent=4):
         """
@@ -268,7 +252,7 @@ class Settings(object):
         @rtype:  C{string}
         
         @see: the U{python json
-              module<http://docs.python.org/library/json.html#basic-usage>}
+              module<http://docs.python.org/library/json.html>}
               documentation for further information about the indent level.
         """
         return json.dumps(self.to_dict(), indent)
@@ -279,3 +263,5 @@ class Settings(object):
     def __repr__(self):
         return repr(self.__dict__)
 
+settings = Settings()
+settings.load_globals()

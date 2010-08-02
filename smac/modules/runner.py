@@ -1,17 +1,5 @@
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 """
 A twisted application configuration file used by smac to start up new module
@@ -20,51 +8,62 @@ This file is passed as argument to a emulated call to the C{twistd}
 command line application runner.
 
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
-@organization: EIA-FR <http://www.eia-fr.ch>
-@copyright: 2005-2010 MISG/ICTI/EIA-FR
-@license: GPLv3
 """
+
 
 from twisted.application import service, internet
 
-from thrift.transport.TTwisted import ThriftServerFactory
-from thrift.protocol.TBinaryProtocol import TBinaryProtocolFactory
 from smac.core.management.commands.run import startup_registry
 from smac.util import merge_queues
 from smac.conf import settings
+from smac.python import log
 from smac.amqp.service import AMQService, ThriftAMQService
+from smac.rpc.service import ThriftRPCService
 
 
-processor = startup_registry['processor']
-handler = startup_registry['handler'](startup_registry['instance_id'])
+if startup_registry['__name__'] == '__main__': # Set by the 'smac run' command
+    
+    class FactorySetter(service.Service):
+        def startService(self):
+            from smac import amqp
+            amqp._client_factory = self.parent.client_factory
+            amqp._server_factory = self.parent.server_factory
+            log.info("Global factories setted")
+    
+    # Twisted application
+    application = service.Application("SMAC module")
+    serviceCollection = service.IServiceCollection(application)
 
-# Twisted application
-application = service.Application("SMAC module")
-serviceCollection = service.IServiceCollection(application)
+    processor = startup_registry['amqp_processor']
+    handler = startup_registry['handler'](startup_registry['instance_id'])
 
-# AMQP Client service
-amqp_service = AMQService(
-    settings.amqp.spec,
-    settings.amqp.host,
-    settings.amqp.port,
-    settings.amqp.vhost,
-    settings.amqp.user,
-    settings.amqp.password,
-    settings.amqp.channel
-)
-amqp_service.setName("AMQ Connection layer")
-amqp_service.setServiceParent(serviceCollection)
+    # AMQP Client service
+    amqp_service = AMQService(
+        settings.amqp.spec,
+        settings.amqp.host,
+        settings.amqp.port,
+        settings.amqp.vhost,
+        settings.amqp.user,
+        settings.amqp.password,
+        settings.amqp.channel
+    )
+    amqp_service.setName("AMQ Connection layer")
+    amqp_service.setServiceParent(serviceCollection)
+    
+    FactorySetter().setServiceParent(amqp_service)
 
-# AMQP Thrift service
-#merge_queues(settings.additional_bindings)
-thrift_service = ThriftAMQService(processor, handler)
-thrift_service.setServiceParent(amqp_service)
+    # AMQP Thrift service
+    #merge_queues(settings.additional_bindings)
+    thrift_service = ThriftAMQService(processor, handler)
+    thrift_service.setServiceParent(amqp_service)
 
-# RPC Thrift service
-# @todo: Create a ThriftRPCService to wrap this
-if settings.rpc.run_server:
-    factory = ThriftServerFactory(processor.Processor(handler), TBinaryProtocolFactory())
-    rpc_service = internet.TCPServer(settings.rpc.port, factory)
-    rpc_service.setServiceParent(serviceCollection)
+    # RPC Thrift service
+    try:
+        processor = startup_registry['rpc_processor']
+    except KeyError:
+        pass
+    else:
+        rpc_service = ThriftRPCService(settings.rpc.port, processor, handler)
+        rpc_service.setServiceParent(serviceCollection)
 
-# @todo: Use POSIX Local IPC Sockets for local-local communication
+    # @todo: Use POSIX Local IPC Sockets for local-local communication

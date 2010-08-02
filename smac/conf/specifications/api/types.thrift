@@ -1,21 +1,16 @@
 #!/usr/bin/thrift --gen py:twisted
 
 # Copyright (C) 2005-2010  MISG/ICTI/EIA-FR
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# See LICENSE for details.
 
 namespace py smac.api
+
+typedef string UUID
+typedef string TaskID
+typedef string SessionID
+typedef string Setup
+typedef i64 Timestamp
+typedef string Speaker
 
 #############################################################
 # Date/Time related types                                   #
@@ -26,11 +21,14 @@ struct Time {
 }
 
 struct Date {
-    // @TODO
+    1: i16 year
+    2: i16 month
+    3: i16 day
 }
 
 struct Datetime {
-    // @TODO
+    1: Date date
+    2: Time time
 }
 
 /**
@@ -63,53 +61,6 @@ struct GeneralModuleInfo {
 
 exception InvalidModule {
     1: ModuleAddress module
-}
-
-#############################################################
-# Task handling                                             #
-#############################################################
- 
-typedef i64 TaskID
-
-enum TaskType {
-    DETERMINED
-    UNDETERMINED
-}
-
-enum TaskStatus {
-    RUNNING
-    FAILED
-    PAUSED
-    CANCELLED
-    COMPLETED
-}
-
-struct Task {
-    1: TaskID id,
-    2: TaskType type,
-    3: TaskStatus status,
-    4: string status_text,
-    5: ModuleAddress module,
-    6: optional double completed,
-    7: optional TimeDelta remaining,
-}
-
-exception InvalidTask {
-    1: TaskID task_id
-}
-
-#############################################################
-# Base services                                             #
-#############################################################
-
-struct Task {
-    1: TaskID id,
-    2: TaskType type,
-    3: TaskStatus status,
-    4: string status_text,
-    5: ModuleAddress module,
-    6: optional double completed,
-    7: optional TimeDelta remaining,
 }
 
 #############################################################

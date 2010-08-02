@@ -30,7 +30,7 @@ class TimedDict(dict, Observable):
         del self.removers[key]
         
         # Notify the observers
-        self.notify_observers('removed', key, value)
+        self.notify('removed', key, value)
     
     def __setitem__(self, key, value):
         updated = added = False
@@ -51,9 +51,9 @@ class TimedDict(dict, Observable):
         
         # If needed, notify the observers
         if updated:
-            self.notify_observers('updated', key, value)
+            self.notify('updated', key, value)
         elif added:
-            self.notify_observers('added', key, value)
+            self.notify('added', key, value)
     
     def breathe(self, key):
         """

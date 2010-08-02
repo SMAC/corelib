@@ -7,9 +7,6 @@ defines constants and default settings parameters such as AMQP exchange names
 and other system-level defined configuration values.
 
 @author: Jonathan Stoppani <jonathan.stoppani@edu.hefr.ch>
-@organization: EIA-FR <http://www.eia-fr.ch>
-@copyright: 2005-2010 MISG/ICTI/EIA-FR
-@license: GPLv3
 """
 
 import os
@@ -18,7 +15,7 @@ reactor = 'default'
 
 amqp = {
     "vhost": "/", 
-    "host": "10.0.0.102", 
+    "host": "localhost", 
     "password": "guest", 
     "port": 5672, 
     "user": "guest",
@@ -29,13 +26,12 @@ amqp = {
 }
 
 rpc = {
-    "run_server": False,
     "port": 9090,
 }
 
 ping_interval = 3
 
-max_ping_interval = ping_interval * 3
+max_ping_interval = 5 #ping_interval * 3
 
 stream_logs = True
 
