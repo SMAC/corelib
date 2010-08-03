@@ -60,7 +60,7 @@ class Command(object):
         template = os.path.join(os.path.dirname(conf.__file__), TEMPLATE_DIR)
         
         # Begin substitution
-        with open(os.path.join(template, 'method.py')) as f:
+        with open(os.path.join(template, 'method.tpy')) as f:
             method = f.read()
         
         # Create methods declarations
@@ -84,7 +84,7 @@ class Command(object):
         methods = "\n".join([INDENT + l for l in methods.split("\n")]).strip()
         
         # Begin substitution
-        with open(os.path.join(template, 'implementation.py')) as f:
+        with open(os.path.join(template, 'implementation.tpy')) as f:
             impl = f.read().format(**{
                 'interface_capitalized': interface.capitalize(),
                 'interface_lower': interface,
@@ -94,7 +94,7 @@ class Command(object):
         
         # Copy template dir into place
         destination = './smac-' + implementation.lower()
-        shutil.copytree(template, destination, ignore=lambda d, l: 'method.py')
+        shutil.copytree(template, destination, ignore=lambda d, l: 'method.tpy')
         
         # Write changes to disk
         with open(os.path.join(destination, 'implementation.py'), 'w') as f:

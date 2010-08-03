@@ -16,7 +16,7 @@ import os
 import sys
 import inspect
 
-from twisted.python import usage
+from twisted.python import usage, runtime
 from zope.interface import implements, implementedBy
 
 from smac.core.management import ICommand, BaseOptions
@@ -126,7 +126,10 @@ class Command(object):
         from twisted.scripts import twistd
         
         config = twistd.ServerOptions()
-        config.parseOptions(['--pidfile={0}.pid'.format(id), '-noy', runner])
+        options = ['-noy', runner]
+        if runtime.platformType != "win32":
+            options.append('--pidfile={0}.pid'.format(id))
+        config.parseOptions(options)
         
         # Set the terminal title
         print "\x1b]2;SMAC Module - {0} {1}\x07".format(handler.__name__, id)
