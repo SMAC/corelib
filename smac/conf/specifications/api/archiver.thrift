@@ -25,7 +25,7 @@ service FileReceiver  {
     ),
 }
 
-service Archiver extends base.TaskModule {
+service Archiver extends base.SessionModule {
     void start_upload(
         1: string transfer_key
         2: string name

@@ -1,4 +1,4 @@
-Message flow management
+Message flow management title
 =======================
 
 The SMAC's message dispatching subsystem is built in a flexible and adaptable

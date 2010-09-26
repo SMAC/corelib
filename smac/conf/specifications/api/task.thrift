@@ -54,7 +54,7 @@ service TaskServer {
     void resume  ()                           throws (1: InvalidCommand invalid),
     void cancel  (1: optional string message) throws (1: InvalidCommand invalid),
     void fail    (1: optional string message) throws (1: InvalidCommand invalid),
-    void complete(1: optional string message) throws (1: InvalidCommand invalid),
+    void stop(1: optional string message) throws (1: InvalidCommand invalid),
     Task info    (),
     string module(),
 }

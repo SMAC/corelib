@@ -7,6 +7,6 @@ include "base.thrift"
 
 namespace py smac.api.analyzer
 
-service Analyzer extends base.TaskModule {
+service Analyzer extends base.SessionModule {
     void analyze(1: i32 contrib_id)
 }

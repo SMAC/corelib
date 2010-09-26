@@ -1,7 +1,8 @@
 
 
-from twisted.web.client import getPage
+from twisted.web.client import HTTPClientFactory, _parse
 from twisted.python import log
+from twisted.internet import reactor
 from thrift.protocol.TBinaryProtocol import TBinaryProtocolFactory
 from thrift.transport.TTransport import TTransportBase, TMemoryBuffer
 
@@ -32,8 +33,18 @@ class HTTPTransport(TTransportBase):
         self._buffer.write(buf)
         
     def flush(self):
-        d = getPage(self.url, method='POST', postdata=self._buffer.getvalue())
-        d.addCallbacks(self._handle, self._error)
+        scheme, host, port, path = _parse(self.url)
+        factory = HTTPClientFactory(self.url, method='POST', postdata=self._buffer.getvalue())
+        factory.noisy = False
+        
+        if scheme == 'https':
+            from twisted.internet import ssl
+            contextFactory = ssl.ClientContextFactory()
+            reactor.connectSSL(host, port, factory, contextFactory)
+        else:
+            reactor.connectTCP(host, port, factory)
+        
+        factory.deferred.addCallbacks(self._handle, self._error)
         self._buffer = StringIO()
         
     def _handle(self, response):

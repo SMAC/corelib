@@ -86,8 +86,11 @@ class Command(object):
             # and thus contained in the directory which we just inserted in
             # the path.
             handler = utils.get_class(base.ModuleBase)
-        except ImportError:
+        except ImportError as e:
             print "The 'implementation' python module was not found."
+            print e
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
             
         if handler is None:

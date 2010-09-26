@@ -20,7 +20,7 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 from smac.python import log
-from smac.amqp.models import Exchange, Queue
+from smac.amqp.models import Exchange, Queue, IAddress
 from smac.conf import topology
 from smac.modules import utils
 
@@ -40,11 +40,13 @@ class SMACServerFactory(object):
             self.reply_to = "reply-to"
     
     @defer.inlineCallbacks
-    def build_server(self, delegate, processor, handler, address, queues=None):
+    def build_server(self, delegate, processor, handler, address, queues=None, standalone=True):
         processor_name = processor.__name__
         
         log.debug("Creating new server for {0} with ID {1}".format(
                 processor_name, address.instance))
+        
+        address = IAddress(address)
         
         if not queues:
             queues = topology.queues
@@ -99,7 +101,10 @@ class SMACServerFactory(object):
             except Exception as e:
                 pass
         
-        processor = processor.Processor(weakref.proxy(handler, destroy))
+        if not standalone:
+            handler = weakref.proxy(handler, destroy)
+        
+        processor = processor.Processor(handler)
         
         for tag in tags:
             queue = yield self.client.queue(tag)
@@ -160,6 +165,8 @@ class SMACClientFactory(object):
     def build_client(self, address, service=None, distribution=None, cache=True):
         yield self.client_lock.acquire()
         try:
+            address = IAddress(address)
+            
             if not service:
                 service = utils.get_module_from_address(address)
             
@@ -241,7 +248,7 @@ class SMACClientFactory(object):
         (fname, mtype, rseqid) = iprot.readMessageBegin()
         
         if rseqid not in client._reqs:
-            log.msg('Missing rseqid! fname = %r, rseqid = %s, mtype = %r, routing key = %r, client = %r, msg.content.body = %r' % (fname, rseqid, mtype, msg.routing_key, client, msg.content.body))
+            log.warn('Missing rseqid! fname = %r, rseqid = %s, mtype = %r, routing key = %r, client = %r, msg.content.body = %r' % (fname, rseqid, mtype, msg.routing_key, client, msg.content.body))
             
         method = getattr(client, 'recv_' + fname)
         method(iprot, mtype, rseqid)

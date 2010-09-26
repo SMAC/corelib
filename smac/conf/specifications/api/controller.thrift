@@ -7,6 +7,7 @@ include "types.thrift"
 include "base.thrift"
 include "logger.thrift"
 include "session.thrift"
+include "errors.thrift"
 include "task.thrift"
 
 namespace py smac.api.controller
@@ -41,12 +42,13 @@ service Controller extends base.TaskModule {
 service ControllerFrontend extends base.RPCService {
     map<types.SessionID,session.Basic> session_get_active(),
     types.SessionID session_create(1: string title, 2: types.Setup setup),
-    types.SessionID session_create(1: string title, 2: types.Setup setup),
-    session.Session session_get(1: types.SessionID sessid),
-    void            session_meta_save(1: types.SessionID sessid, 2: session.Meta meta),
-    types.TaskID    session_recording_start(1: types.SessionID sessid)
-    void            session_recording_stop(1: types.SessionID sessid)
-    types.TaskID    session_archive(1: types.SessionID sessid)
+    session.Session session_get(1: types.SessionID sessid) throws (1: errors.DoesNotExist notfound),
+    void            session_meta_save(1: types.SessionID sessid, 2: session.Meta meta) throws (1: errors.DoesNotExist notfound),
+    void            session_configure(1: types.SessionID sessid) throws (1: errors.DoesNotExist notfound),
+    types.TaskID    session_record(1: types.SessionID sessid) throws (1: errors.DoesNotExist notfound),
+    types.TaskID    session_archive(1: types.SessionID sessid) throws (1: errors.DoesNotExist notfound),
+    void            session_recording_stop(1: string session_id),
+    void task_stop(1: types.TaskID taskid) throws (1: errors.DoesNotExist notfound),
     
     
     void request_log_streaming(1: types.ModuleAddress module) throws (1: types.InvalidModule no_module),
@@ -61,7 +63,6 @@ service ControllerFrontend extends base.RPCService {
     ),
     
     void start_recording(1: string session_id),
-    void stop_recording(1: string session_id),
     void archive(1: string session_id),
 }
 

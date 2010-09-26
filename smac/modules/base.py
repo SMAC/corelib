@@ -14,7 +14,8 @@ from smac.modules.task import TaskModule
 
 
 class ModuleBase(TaskModule):
-    pass
+    def configure_session(self, session):
+        pass
     
     
     #def start_log_streaming(self):

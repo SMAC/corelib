@@ -1,15 +1,12 @@
 
-from twisted.internet import defer
 from zope.interface import implements
 
-from smac.amqp.models import Address
 from smac.api.session import SessionListener
 from smac.conf.topology import queue, binding
-from smac.python import log
-from smac.tasks.base import ITask
+from smac.session.setup import AcquisitionSetup
 
 
-class SessionListener(object):
+class Handler(object):
     
     implements(SessionListener.Iface)
     
@@ -22,12 +19,10 @@ class SessionListener(object):
     
     def __init__(self, host, session):
         self.session = session
+        self.setup = AcquisitionSetup(session.setup)
         self.host = host
     
-    def recording_start(self, task):
-        pass
-    
-    def recording_stop(self, task):
+    def record(self, task):
         pass
     
     def archive(self, task):

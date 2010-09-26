@@ -29,7 +29,7 @@ rpc = {
     "port": 9090,
 }
 
-ping_interval = 3
+ping_interval = 1.5
 
 max_ping_interval = 5 #ping_interval * 3
 

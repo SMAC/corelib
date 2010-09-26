@@ -10,8 +10,8 @@ struct Timing {
 }
 
 struct Coordinates {
-    1: double lat
-    2: double lon
+    1: double latitude
+    2: double longitude
 }
 
 struct Location {
@@ -44,8 +44,7 @@ struct Basic {
 }
 
 service SessionListener {
-    oneway void recording_start(1: types.TaskID parent),
-    oneway void recording_stop(1: types.TaskID parent),
+    oneway void record(1: types.TaskID parent),
     oneway void archive(1: types.TaskID parent),
     oneway void analyze(1: types.TaskID parent),
     oneway void publish(1: types.TaskID parent),

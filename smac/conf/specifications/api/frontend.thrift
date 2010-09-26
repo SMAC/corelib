@@ -14,7 +14,8 @@ service Modules {
     void recorder_announced(1: types.GeneralModuleInfo module, 2: list<recorder.AcquisitionDevice> devices),
     void gone(1: types.ModuleAddress addr),
 }
-/*
+
 service Tasks {
-     oneway void update(1: types.Task task),
-}*/
+    void update(1: task.Task task),
+    void update_all(1: list<task.Task> tasks),
+}

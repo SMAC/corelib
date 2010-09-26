@@ -37,6 +37,9 @@ class AcquisitionSetup(object):
             
         self._cache = {}
     
+    def get_setup_addresses(self):
+        pass
+    
     def is_valid(self):
         """
         Validates the setup document against the business rules.

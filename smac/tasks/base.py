@@ -27,6 +27,7 @@ from zope.interface import Attribute, Interface, implements
 from smac import amqp
 from smac.conf.topology import queue, binding
 from smac.api.tasks import ttypes as types, TaskServer, TaskListener
+from smac.python import log
 from smac.tasks import error
 
 
@@ -49,9 +50,6 @@ class ITask(Interface):
     def __hash__():
         """
         """
-    
-    def subscribe(client):
-        """Sets the client to which the task instance should send the updates"""
     
     def run(*args, **kwargs):
         """Starts to run the task"""
@@ -97,13 +95,22 @@ class Task(types.Task):
     
     implements(ITask, TaskServer.Iface)
     
+    queues = (
+        queue('', (
+            binding('tasks', 'tasks.{routing_key}.commands'),
+        ), extra={
+            'exclusive': True,
+            'auto_delete': True,
+        }),
+    )
+    
     def __init__(self, id=None, parent='', sessid='', name=None,
             status=types.TaskStatus.WAITING, status_text="", remaining=None,
             completed=None):
         self._task_client = None
         self.id = id or str(uuid.uuid1())
         self.parent = parent
-        self.name = name or self.__class__.__name__
+        self.name = name or getattr(self.__class__, 'name', self.__class__.__name__)
         self.sessid = sessid
         self._status = status
         self._status_text = status_text
@@ -119,10 +126,6 @@ class Task(types.Task):
     
     def __hash__(self):
         return hash(self.id)
-    
-    def subscribe(self, client):
-        self._task_client = client
-        self.notify()
     
     def notify(self):
         if not self._task_client or self.status is None:
@@ -190,12 +193,20 @@ class Task(types.Task):
         return locals()
     completed = property(**completed())
     
+    @defer.inlineCallbacks
     def start(self, *args, **kwargs):
         assert self.status is types.TaskStatus.WAITING, "Task already started"
+        
+        address = amqp.models.Address(routing_key=self.id)
+        yield amqp.build_server(address, TaskServer, self, self.queues)
+        
+        address = amqp.models.Address(routing_key='tasks.{0}.updates'.format(self.id))
+        self._task_client = yield amqp.build_client(address, TaskListener, distribution='tasks')
+        
         self._started = time.time()
-        d = defer.maybeDeferred(self.run, *args, **kwargs)
+        r = yield defer.maybeDeferred(self.run, *args, **kwargs)
         self.status = types.TaskStatus.RUNNING
-        return d
+        defer.returnValue(r)
     
     def finish(self):
         return self.finished
@@ -210,6 +221,22 @@ class Task(types.Task):
         return str(self.owner.address)
     
     def pause(self):
+        """
+        Allows to pause a running task. Subclasses should override this method
+        to provide all needed actions to pause a task and modify the task
+        status along the lines of::
+        
+            self.status = types.TaskStatus.PAUSED
+        
+        For convenience, this code was wrapped in the C{_pause} method which
+        also offers validation over the current task status.
+        """
+        raise NotImplementedError
+    
+    def _pause(self):
+        """
+        Utility method for subclasses to pause the curren task.
+        """
         if self.status is not types.TaskStatus.RUNNING:
             raise ValueError("Can't resume a non running task.")
         
@@ -229,6 +256,9 @@ class Task(types.Task):
             self._status_text = msg
         self.status = types.TaskStatus.CANCELLED
         self.finished.errback(error.TaskCancelled(msg))
+    
+    def stop(self, msg=None):
+        self.cancel(self, msg)
     
     def fail(self, msg=None):
         if self.status == types.TaskStatus.FAILED:
@@ -279,6 +309,7 @@ class CompoundTask(Task):
             return
         
         yield self.add(task)
+        self.notify()
         
         #if self.completed is 1 and self.status is not types.TaskStatus.COMPLETED:
         #    self.complete()
@@ -333,7 +364,8 @@ class CompoundTask(Task):
         yield self.add_lock.acquire()
         
         try:
-            if task not in self.children:
+            if task.id not in self.children:
+                log.debug("New child task received ({0})".format(task.id))
                 address = amqp.models.Address(routing_key='tasks.{0}.commands'.format(task.id))
                 self.clients[task.id] = yield amqp.build_client(address, TaskServer, distribution='tasks')
             
@@ -342,14 +374,25 @@ class CompoundTask(Task):
         finally:
             self.add_lock.release()
     
-    def complete(self, msg=None):
+    def stop(self, msg=None):
         for c in self.clients.values():
-            c.complete(msg)
+            print "COMPLETING", c
+            c.stop(msg)
         
         if msg:
             self.status_text = msg
     
+    @defer.inlineCallbacks
     def start(self, *args, **kwargs):
-        pass
+        log.debug("Starting server for compound task '{0}'".format(self.id))
+        address = amqp.models.Address(routing_key='*')
+        yield amqp.build_server(address, TaskListener, self, self.queues)
+        
+        address = amqp.models.Address(routing_key='tasks.{0}.updates'.format(self.id))
+        self._task_client = yield amqp.build_client(address, TaskListener, distribution='tasks')
+        
+        r = yield defer.maybeDeferred(self.run, *args, **kwargs)
+        self.notify()
+        defer.returnValue(r)
 
 

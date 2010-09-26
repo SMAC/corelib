@@ -9,7 +9,7 @@ Task management framework for SMAC systems.
 
 
 from smac.tasks.register import TaskRegister
-from smac.tasks.base import Task, ITask
+from smac.tasks.base import Task, ITask, CompoundTask, ICompoundTask
 
 
-__all__ = ('TaskRegister', 'Task', 'ITask')
+__all__ = ('TaskRegister', 'Task', 'ITask', 'CompoundTask', 'ICompoundTask')
